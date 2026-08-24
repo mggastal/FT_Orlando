@@ -1,0 +1,25 @@
+{
+  "cliente": "Escuela eINES",
+  "cor": "#B8860B",
+  "letra": "EI",
+  "lancamentos": [
+    "VSL",
+    "HUB4C",
+    "GR13",
+    "GR12",
+    "GR11",
+    "GR10",
+    "GR7",
+    "PLF ABR26",
+    "METEÓRICO",
+    "LM"
+  ],
+  "moeda": "USD",
+  "moeda_simbolo": "$",
+  "atualizado": "24/08/2026",
+  "kpis": {
+    "spend": 5864.45,
+    "leads": 976,
+    "cpl": 6.01
+  }
+}
