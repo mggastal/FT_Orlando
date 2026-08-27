@@ -15,8 +15,8 @@
     "METEÓRICO",
     "LM"
   ],
-  "moeda": "USD",
-  "moeda_simbolo": "$",
+  "moeda": "EUR",
+  "moeda_simbolo": "€",
   "atualizado": "27/08/2026",
   "kpis": {
     "spend": 0.0,
