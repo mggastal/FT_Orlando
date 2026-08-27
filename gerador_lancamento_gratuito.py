@@ -25,6 +25,7 @@ COR_ACENTO       = "#B8860B"
 #   ("LABEL","TERMO")   → botão mostra LABEL, busca "contém TERMO" no nome da campanha
 # Primeiro item = selecionado por padrão ao abrir o dashboard.
 LANCAMENTO_CODS  = [
+    ("GR14",      "GR14"),
     ("VSL",       "VSL"),
     ("HUB4C",     "HUB_4C"),
     ("GR13",      "GR13"),
@@ -105,7 +106,7 @@ URL_GA   = sheet_url("breakdown-gender-age")
 URL_PT   = sheet_url("breakdown-platform")
 ABA_VENDAS = "Vendas VSL"          # aba da planilha com as vendas
 MOSTRAR_VENDAS = False       # True para exibir a página/menu "Vendas" quando as vendas começarem
-DATA_MINIMA = "01/01/2026"   # ignora linhas ANTES desta data. A planilha tem histórico desde set/2025;
+DATA_MINIMA = "01/01/2024"   # ignora linhas ANTES desta data. Recuado p/ incluir lançamentos antigos (GR7 jun/24, GR10 mai/25, GR11 jul/25);
                              # como o dashboard usa datas dd/mm, a partir de 22/09/2026 os dias de 2025
                              # colidiriam com os de 2026 e inflariam os filtros (mesmo bug já visto na Rafa).
 URL_VENDAS = sheet_url(ABA_VENDAS)
@@ -194,13 +195,15 @@ def calc_kpis(p):
 
 def _temp_publico(nome):
     """Classifica a temperatura do público pela nomenclatura de fase/emoji do cliente eINES.
-       Frio  = 1FASE / 🔵
-       Quente= 2FASE / 3FASE / 🟡 / 🔴
+       Frio  = 1FASE / 🔵 / TF
+       Quente= 2FASE / 3FASE / 🟡 / 🔴 / TT
        Retorna 'quente', 'frio' ou None (indefinido)."""
-    n = str(nome)
-    if ("🔵" in n) or ("1FASE" in n.upper()):
+    n = str(nome).upper()
+
+    if ("🔵" in n) or ("1FASE" in n) or ("TF" in n):
         return "frio"
-    if ("🟡" in n) or ("🔴" in n) or ("2FASE" in n.upper()) or ("3FASE" in n.upper()):
+
+    if ("🟡" in n) or ("🔴" in n) or ("2FASE" in n) or ("3FASE" in n) or ("TT" in n):
         return "quente"
     return None
 
