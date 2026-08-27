@@ -46,7 +46,7 @@ LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = de
 #   "BRL"  → R$ (Real Brasileiro)
 #   "USD"  → $ (Dólar Americano)
 #   "EUR"  → € (Euro)
-MOEDA            = "USD"
+MOEDA            = "EUR"
 
 # Metas do funil — define cores (verde/amarelo/vermelho)
 # ── Foco em VENDAS (VSL): CPV = custo por venda ──
