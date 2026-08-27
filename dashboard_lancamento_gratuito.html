@@ -311,6 +311,11 @@ details.desk-only{display:block!important;}
 .vd-note{background:var(--surface2);border:1px dashed var(--border);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;}
 @media(max-width:820px){.vd-grid2{grid-template-columns:1fr;}}
 
+
+.chart-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.gran-bar{display:flex;gap:2px;background:var(--bg);padding:2px;border-radius:7px;border:1px solid var(--border);flex-shrink:0;}
+.gb{padding:4px 10px;border-radius:5px;border:none;background:transparent;cursor:pointer;font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;font-family:'DM Sans',sans-serif;}
+.gb.active{background:var(--surface);color:var(--accent,#B8860B);box-shadow:var(--sh);}
 </style>
 </head>
 <body>
@@ -357,8 +362,8 @@ details.desk-only{display:block!important;}
         <button class="pb" onclick="setPeriod(1,this)" data-i18n="period_ontem">Ontem</button>
         <button class="pb" onclick="setPeriod(7,this)">7d</button>
         <button class="pb" onclick="setPeriod(14,this)">14d</button>
-        <button class="pb active" onclick="setPeriod(30,this)">30d</button>
-        <button class="pb" onclick="setPeriod(0,this)" data-i18n="period_tudo">Tudo</button>
+        <button class="pb" onclick="setPeriod(30,this)">30d</button>
+        <button class="pb active" onclick="setPeriod(0,this)" data-i18n="period_tudo">Tudo</button>
       </div>
       <div class="date-range">
         <input type="date" id="dtI"><span>→</span><input type="date" id="dtF">
@@ -393,8 +398,17 @@ details.desk-only{display:block!important;}
       </div>
       <div style="margin-bottom:14px"></div>
       <div class="cc mb14">
-        <div class="cc-t" data-i18n="chart_leads_ttl">Leads Diários &amp; Investimento</div>
-        <div class="cc-s" data-i18n="chart_leads_sub">Leads (barras azuis) · Invest. (linha verde) · CPL (linha preta tracejada)</div>
+        <div class="chart-head">
+          <div>
+            <div class="cc-t" data-i18n="chart_leads_ttl">Leads Diários &amp; Investimento</div>
+            <div class="cc-s" data-i18n="chart_leads_sub">Leads (barras) · Invest. (linha) · CPL (linha tracejada)</div>
+          </div>
+          <div class="gran-bar">
+            <button class="gb active" data-g="daily"   onclick="setGran('daily',this)"   data-i18n="gran_dia">Diário</button>
+            <button class="gb"        data-g="weekly"  onclick="setGran('weekly',this)"  data-i18n="gran_sem">Semanal</button>
+            <button class="gb"        data-g="monthly" onclick="setGran('monthly',this)" data-i18n="gran_mes">Mensal</button>
+          </div>
+        </div>
         <div class="cw" style="height:210px"><canvas id="chMetaMain"></canvas></div>
       </div>
       <div class="section">
@@ -496,6 +510,11 @@ details.desk-only{display:block!important;}
         </summary>
         <div style="padding:0 14px 12px;" id="campFilter"></div>
       </details>
+      <div class="gran-bar" style="margin-bottom:12px;width:fit-content">
+        <button class="gb active" data-g="daily"   onclick="setGran('daily',this)"   data-i18n="gran_dia">Diário</button>
+        <button class="gb"        data-g="weekly"  onclick="setGran('weekly',this)"  data-i18n="gran_sem">Semanal</button>
+        <button class="gb"        data-g="monthly" onclick="setGran('monthly',this)" data-i18n="gran_mes">Mensal</button>
+      </div>
       <div id="dailyCharts"></div>
     </div>
 
@@ -580,8 +599,11 @@ const TRANSLATIONS = {
     temp_ttl:         'Temperatura',
     temp_quente:      'Quente',
     temp_frio:        'Frio',
-    chart_leads_ttl:  'Vendas Diárias & Investimento',
-    chart_leads_sub:  'Vendas (barras verdes) · Invest. (linha roxa) · CPV (linha preta tracejada)',
+    chart_leads_ttl:  'Leads Diários & Investimento',
+    gran_dia:         'Diário',
+    gran_sem:         'Semanal',
+    gran_mes:         'Mensal',
+    chart_leads_sub:  'Leads (barras) · Invest. (linha) · CPL (linha tracejada)',
     campanhas:        'Campanhas',
     segmentacao:      'Segmentação',
     genero:           'Gênero',
@@ -742,8 +764,11 @@ const TRANSLATIONS = {
     temp_ttl:         'Temperatura',
     temp_quente:      'Caliente',
     temp_frio:        'Frío',
-    chart_leads_ttl:  'Ventas Diarias & Inversión',
-    chart_leads_sub:  'Ventas (barras verdes) · Inversión (línea morada) · CPV (línea negra punteada)',
+    chart_leads_ttl:  'Leads Diarios & Inversión',
+    gran_dia:         'Diario',
+    gran_sem:         'Semanal',
+    gran_mes:         'Mensual',
+    chart_leads_sub:  'Leads (barras) · Inversión (línea) · CPL (línea punteada)',
     campanhas:        'Campañas',
     segmentacao:      'Segmentación',
     genero:           'Género',
@@ -928,7 +953,7 @@ function fR(v){
 
 // ═══ ESTADO ═══
 let filtroAtivo=(LANCAMENTO_CODS&&LANCAMENTO_CODS.length)?LANCAMENTO_CODS[0]:'all';
-let  periodDays=30, dateI=null, dateF=null, showLabels=true, labelSize=8;
+let  periodDays=0, dateI=null, dateF=null, showLabels=true, granular='daily', labelSize=8;
 let pesFilters={};
 
 // ═══ UTILS ═══
@@ -1007,6 +1032,40 @@ function applyPeriod(daily){
   }
   const out={};
   Object.keys(daily).forEach(k=>{out[k]=idxs.map(i=>daily[k][i]);});
+  return out;
+}
+
+
+// ═══ AGREGAÇÃO POR GRANULARIDADE (Diário/Semanal/Mensal) ═══
+function _weekKey(d){
+  const day=d.getDay(); const diff=(day===0?-6:1-day);
+  const mon=new Date(d); mon.setDate(d.getDate()+diff);
+  const dd=String(mon.getDate()).padStart(2,'0'), mm=String(mon.getMonth()+1).padStart(2,'0');
+  return dd+'/'+mm+'/'+String(mon.getFullYear()).slice(-2);
+}
+function _monthKey(d){
+  const meses=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return meses[d.getMonth()]+'/'+String(d.getFullYear()).slice(-2);
+}
+// Agrega a série diária (md) em semanas/meses SOMANDO os brutos e recalculando
+// as métricas de custo/taxa DEPOIS da soma (nunca média de custos diários).
+function aggGran(md){
+  if(!md||granular==='daily'||!md.days?.length) return md;
+  const keyFn = granular==='weekly'?_weekKey:_monthKey;
+  const RAW=['spend','impressions','link_clicks','page_view','leads','checkout','purchases','receita'];
+  const buckets={}, order=[];
+  md.days.forEach((lbl,i)=>{
+    const key=keyFn(parseDayStr(lbl));
+    if(!buckets[key]){ buckets[key]={}; RAW.forEach(k=>buckets[key][k]=0); order.push(key); }
+    RAW.forEach(k=>{ if(md[k]) buckets[key][k]+=(md[k][i]||0); });
+  });
+  const out={days:order}; RAW.forEach(k=>{ if(md[k]) out[k]=order.map(key=>buckets[key][k]); });
+  // recalcula derivadas por bucket
+  out.ctr=order.map(key=>{const b=buckets[key];return b.impressions>0?r2(b.link_clicks/b.impressions*100):null;});
+  out.cpm=order.map(key=>{const b=buckets[key];return b.impressions>0?r2(b.spend/b.impressions*1000):null;});
+  out.cpl=order.map(key=>{const b=buckets[key];return b.leads>0?r2(b.spend/b.leads):null;});
+  out.connect_rate=order.map(key=>{const b=buckets[key];return b.link_clicks>0?r2(b.page_view/b.link_clicks*100):null;});
+  out.tx_conv=order.map(key=>{const b=buckets[key];return b.page_view>0?r2(b.leads/b.page_view*100):null;});
   return out;
 }
 
@@ -1166,13 +1225,15 @@ function renderMeta(){
   setTimeout(()=>buildFunnel(funnelKpis),30);
   setTimeout(()=>buildTemp(getMK()?.temp),30);
 
+  const mg=aggGran(md);
   dc('chMetaMain');
+  document.getElementById('chMetaMain').__gran=granular;
   CH['chMetaMain']=new Chart(document.getElementById('chMetaMain'),{
-    data:{labels:md.days,datasets:[
-      {label:t('kpi_leads'),data:md.leads,backgroundColor:'rgba(59,130,246,.7)',borderRadius:3,type:'bar',yAxisID:'y1',
+    data:{labels:mg.days,datasets:[
+      {label:t('kpi_leads'),data:mg.leads,backgroundColor:'rgba(59,130,246,.7)',borderRadius:3,type:'bar',yAxisID:'y1',
        datalabels:{...makeDatalabels('#3b82f6','',v=>v!=null?fN(v):null),display:ctx=>showLabels}},
-      {label:t('kpi_invest'),data:md.spend,borderColor:'#059669',backgroundColor:'transparent',tension:.3,pointRadius:2,borderWidth:2,type:'line',spanGaps:true,datalabels:{display:false}},
-      {label:t('kpi_cpl'),data:md.cpl,borderColor:'#111',borderDash:[5,3],backgroundColor:'transparent',tension:.3,pointRadius:2,borderWidth:1.5,type:'line',yAxisID:'y2',spanGaps:true,
+      {label:t('kpi_invest'),data:mg.spend,borderColor:'#059669',backgroundColor:'transparent',tension:.3,pointRadius:2,borderWidth:2,type:'line',spanGaps:true,datalabels:{display:false}},
+      {label:t('kpi_cpl'),data:mg.cpl,borderColor:'#111',borderDash:[5,3],backgroundColor:'transparent',tension:.3,pointRadius:2,borderWidth:1.5,type:'line',yAxisID:'y2',spanGaps:true,
        datalabels:{display:ctx=>showLabels,color:'#333',font:{size:labelSize,weight:'bold'},formatter:v=>v!=null?fR(v):null,anchor:'end',align:'top',offset:2,clip:false}},
     ]},
     options:{...bo(),scales:{
@@ -1710,6 +1771,7 @@ function renderDiario(){
 function renderDiarioCharts(){
   const md=getDailyForCamp()||getMD();
   if(!md) return;
+  const mg=aggGran(md);
 
   const totImp = (md.impressions||[]).reduce((a,b)=>a+(b||0),0);
   const totLc  = (md.link_clicks||[]).reduce((a,b)=>a+(b||0),0);
@@ -1740,11 +1802,11 @@ function renderDiarioCharts(){
 
   // Labels traduzidos para o eixo Y dos gráficos
   const METRICS=[
-    {id:'ctr',  ttl:'CTR (%)',                                 suffix:'%', data:()=>md.ctr},
-    {id:'cpm',  ttl:`CPM (${MOEDA_SIMBOLO})`,                  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>md.cpm},
-    {id:'cpl',  ttl:`${t('kpi_cpl_sub')} (${MOEDA_SIMBOLO})`,  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>md.cpl},
-    {id:'cr',   ttl:'Connect Rate (%)',                        suffix:'%', data:()=>md.connect_rate},
-    {id:'tx_cv',ttl:(currentLang==='ES'?'Tasa Conversión (%)':'Taxa Conversão (%)'), suffix:'%', data:()=>md.tx_conv},
+    {id:'ctr',  ttl:'CTR (%)',                                 suffix:'%', data:()=>mg.ctr},
+    {id:'cpm',  ttl:`CPM (${MOEDA_SIMBOLO})`,                  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>mg.cpm},
+    {id:'cpl',  ttl:`${t('kpi_cpl_sub')} (${MOEDA_SIMBOLO})`,  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>mg.cpl},
+    {id:'cr',   ttl:'Connect Rate (%)',                        suffix:'%', data:()=>mg.connect_rate},
+    {id:'tx_cv',ttl:(currentLang==='ES'?'Tasa Conversión (%)':'Taxa Conversão (%)'), suffix:'%', data:()=>mg.tx_conv},
   ];
 
   const el=document.getElementById('dailyCharts');
@@ -1774,7 +1836,7 @@ function renderDiarioCharts(){
     const id=`ch_${m.id}`;
     if(CH[id]){CH[id].destroy();delete CH[id];}
     CH[id]=new Chart(document.getElementById(id),{type:'line',
-      data:{labels:md.days,datasets:[
+      data:{labels:mg.days,datasets:[
         {label:m.ttl,data,borderColor:COLOR,backgroundColor:COLOR+'18',fill:true,
          tension:.3,pointRadius:2,borderWidth:2,spanGaps:true,
          datalabels:{display:ctx=>showLabels,color:COLOR,font:{size:labelSize,weight:'bold'},
@@ -2080,6 +2142,12 @@ function buildLctBar(){
   ).join('')+`<button class="lct-btn${filtroAtivo==='all'?' active':''}" id="btnLctAll" onclick="setFiltroAtivo('all',this)">${t('lct_tudo')}</button>`;
 }
 
+function setGran(g,btn){
+  granular=g;
+  // sincroniza todos os grupos de botões de granularidade
+  document.querySelectorAll('.gb').forEach(b=>b.classList.toggle('active', b.dataset.g===g));
+  rerenderActive();
+}
 function setPeriod(days,btn){
   periodDays=days; dateI=null; dateF=null;
   document.getElementById('dtI').value=''; document.getElementById('dtF').value='';
