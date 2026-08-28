@@ -3,24 +3,14 @@
   "cor": "#B8860B",
   "letra": "EI",
   "lancamentos": [
-    "GR14",
-    "VSL",
-    "HUB4C",
-    "GR13",
-    "GR12",
-    "GR11",
-    "GR10",
-    "GR7",
-    "PLF ABR26",
-    "METEÓRICO",
-    "LM"
+    "GR14"
   ],
   "moeda": "EUR",
   "moeda_simbolo": "€",
   "atualizado": "28/08/2026",
   "kpis": {
-    "spend": 0.0,
-    "leads": 0,
-    "cpl": null
+    "spend": 199.38,
+    "leads": 4,
+    "cpl": 49.85
   }
 }
