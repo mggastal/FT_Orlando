@@ -26,16 +26,6 @@ COR_ACENTO       = "#B8860B"
 # Primeiro item = selecionado por padrão ao abrir o dashboard.
 LANCAMENTO_CODS  = [
     ("GR14",      "GR14"),
-    ("VSL",       "VSL"),
-    ("HUB4C",     "HUB_4C"),
-    ("GR13",      "GR13"),
-    ("GR12",      "GR12"),
-    ("GR11",      "GR11"),
-    ("GR10",      "GR10"),
-    ("GR7",       "GR7"),
-    ("PLF ABR26", "PLF_ABR26"),
-    ("METEÓRICO", "METEORICO"),
-    ("LM",        "[LM]"),
 ]
 USAR_PESQUISA    = False           # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
