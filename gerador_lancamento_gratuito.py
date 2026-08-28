@@ -25,7 +25,7 @@ COR_ACENTO       = "#B8860B"
 #   ("LABEL","TERMO")   → botão mostra LABEL, busca "contém TERMO" no nome da campanha
 # Primeiro item = selecionado por padrão ao abrir o dashboard.
 LANCAMENTO_CODS  = [
-    ("GR14",      "GR14"),
+    ("GR14",      "GR14",      True),   # 3º campo True = lançamento EM CURSO (marcação + default)
 ]
 USAR_PESQUISA    = False           # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
@@ -71,13 +71,20 @@ MOEDA_LABEL   = _moeda_cfg["label"]
 
 # Normaliza LANCAMENTO_CODS → _LCT_PAIRS (label, termo) e LANCAMENTO_CODS → só labels
 def _norm(item):
-    if isinstance(item,(tuple,list)) and len(item)==2:
-        return (str(item[0]).strip(), str(item[1]).strip())
-    return (str(item).strip(), str(item).strip())
-_LCT_PAIRS   = [_norm(c) for c in LANCAMENTO_CODS if c and (c[0] if isinstance(c,(tuple,list)) else c)]
-_LCT_PAIRS   = [(lb,tr) for lb,tr in _LCT_PAIRS if lb and tr]
-LANCAMENTO_CODS = [lb for lb,_ in _LCT_PAIRS]
-_LCT_TERMO_POR_LABEL = {lb:tr for lb,tr in _LCT_PAIRS}
+    # aceita (label, termo), (label, termo, em_curso) ou string simples
+    if isinstance(item,(tuple,list)):
+        lb = str(item[0]).strip()
+        tr = str(item[1]).strip() if len(item)>=2 else lb
+        em_curso = bool(item[2]) if len(item)>=3 else False
+        return (lb, tr, em_curso)
+    s=str(item).strip()
+    return (s, s, False)
+_LCT_TRIOS   = [_norm(c) for c in LANCAMENTO_CODS if c and (c[0] if isinstance(c,(tuple,list)) else c)]
+_LCT_TRIOS   = [(lb,tr,ec) for lb,tr,ec in _LCT_TRIOS if lb and tr]
+_LCT_PAIRS   = [(lb,tr) for lb,tr,_ in _LCT_TRIOS]
+LANCAMENTO_CODS = [lb for lb,_,_ in _LCT_TRIOS]
+LANCAMENTO_EM_CURSO = [lb for lb,_,ec in _LCT_TRIOS if ec]   # labels marcados "em curso"
+_LCT_TERMO_POR_LABEL = {lb:tr for lb,tr,_ in _LCT_TRIOS}
 
 def matched_codes(campaign_name):
     """Retorna labels cujo termo aparece no nome da campanha."""
@@ -184,17 +191,18 @@ def calc_kpis(p):
     }
 
 def _temp_publico(nome):
-    """Classifica a temperatura do público pela nomenclatura de fase/emoji do cliente eINES.
-       Frio  = 1FASE / 🔵 / TF
-       Quente= 2FASE / 3FASE / 🟡 / 🔴 / TT
+    """Classifica a temperatura do público pela nomenclatura do cliente eINES.
+       Quente = -TT- / 2FASE / 3FASE / 🟡 / 🔴
+       Frio   = -TF- / 1FASE / 🔵
+       IMPORTANTE: os marcadores TT/TF são casados como segmento delimitado (-TT-/-TF-),
+       nunca como substring solta — senão o prefixo 'FTF-' das campanhas GR14 casaria
+       com 'TF' e classificaria tudo como frio.
        Retorna 'quente', 'frio' ou None (indefinido)."""
     n = str(nome).upper()
-
-    if ("🔵" in n) or ("1FASE" in n) or ("TF" in n):
-        return "frio"
-
-    if ("🟡" in n) or ("🔴" in n) or ("2FASE" in n) or ("3FASE" in n) or ("TT" in n):
+    if ("-TT-" in n) or ("🟡" in n) or ("🔴" in n) or ("2FASE" in n) or ("3FASE" in n):
         return "quente"
+    if ("-TF-" in n) or ("🔵" in n) or ("1FASE" in n):
+        return "frio"
     return None
 
 def calc_temp(p):
@@ -813,6 +821,7 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
         html=re.sub(r"const LPV_MODO\s*=\s*[^;]+;", f"const LPV_MODO='{_lpv_modo}';", html, count=1)
     html=replace_js_const(html,"VENDAS_DATA", vendas_data if (USAR_VENDAS and vendas_data) else False)
     html=replace_js_const(html,"LANCAMENTO_CODS",  LANCAMENTO_CODS)
+    html=replace_js_const(html,"LANCAMENTO_EM_CURSO", LANCAMENTO_EM_CURSO)
     html=replace_js_const(html,"MOSTRAR_VENDAS",  MOSTRAR_VENDAS)
     html=replace_js_const(html,"DATA_GERACAO",     date.today().strftime("%Y-%m-%d"))
 
