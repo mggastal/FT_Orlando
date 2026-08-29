@@ -29,6 +29,7 @@ LANCAMENTO_CODS  = [
 ]
 USAR_PESQUISA    = False           # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
+USAR_AC          = True            # True = ativa aba ActiveCampaign (CRM) + cruzamento UTM
 LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = desativa aba
 
 # ══ MOEDA ══════════════════════════════════════════════
@@ -98,6 +99,7 @@ def filter_groups():
 # ══════════════════════════════════════════════════════
 def sheet_url(t): return f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&sheet={t}"
 URL_META = sheet_url("meta-ads")
+URL_AC   = sheet_url("active-campaign")
 URL_PES  = sheet_url("Pesquisa")
 URL_GA   = sheet_url("breakdown-gender-age")
 URL_PT   = sheet_url("breakdown-platform")
@@ -700,6 +702,91 @@ def build_vendas_data(df_v, df_meta):
             "paises": paises, "outras": outras_lst}
 
 
+
+# ══ ACTIVE CAMPAIGN (CRM — leads reais por UTM) ══════════
+def load_active_campaign():
+    """Lê a aba 'active-campaign' (export do CRM): 1 linha = 1 lead real, com utm_* já em colunas."""
+    print("  Lendo active-campaign...")
+    try:
+        df = pd.read_csv(URL_AC)
+    except Exception as e:
+        print(f"     ⚠ active-campaign indisponível: {e}")
+        return None
+    # normaliza nomes de coluna
+    ren = {}
+    for c in df.columns:
+        cl = str(c).strip().lower()
+        if cl == "data": ren[c] = "data"
+        elif cl in ("data e hora","data_hora","datahora"): ren[c] = "data_hora"
+        elif cl == "email": ren[c] = "email"
+        elif cl.startswith("utm_source"):   ren[c] = "utm_source"
+        elif cl.startswith("utm_medium"):   ren[c] = "utm_medium"
+        elif cl.startswith("utm_campaign"): ren[c] = "utm_campaign"
+        elif cl.startswith("utm_term"):     ren[c] = "utm_term"
+        elif cl.startswith("utm_content"):  ren[c] = "utm_content"
+    df = df.rename(columns=ren)
+    if "data" not in df.columns:
+        print("     ⚠ aba sem coluna Data"); return None
+    df["data"] = pd.to_datetime(df["data"], errors="coerce", dayfirst=False)
+    # fallback: se 'data' falhar, tenta 'data_hora'
+    if df["data"].isna().all() and "data_hora" in df.columns:
+        df["data"] = pd.to_datetime(df["data_hora"], errors="coerce", dayfirst=True)
+    df = df.dropna(subset=["data"])
+    for u in ["utm_source","utm_medium","utm_campaign","utm_term","utm_content"]:
+        if u not in df.columns: df[u] = ""
+        df[u] = df[u].fillna("").astype(str).str.strip()
+    # corta pelo mesmo DATA_MINIMA do meta (coerência de janela)
+    if DATA_MINIMA:
+        _lim = pd.to_datetime(DATA_MINIMA, dayfirst=True)
+        df = df[df["data"] >= _lim]
+    print(f"     {len(df)} leads reais | {df['data'].min().date() if len(df) else '—'} → {df['data'].max().date() if len(df) else '—'}")
+    return df
+
+def build_ac_data(df_ac):
+    """Estrutura de leads reais para o dashboard:
+       - raw: [{d, us, um, uc, uco, ut}] (1 por lead) → JS filtra por período
+       - daily: leads reais por dia
+       - por_utm: contagem por cada dimensão de UTM
+       - cross: índice campanha→conjunto→criativo com contagem (para o cruzamento no Meta)"""
+    if df_ac is None or not len(df_ac):
+        return None
+    # raw
+    raw = []
+    for _, r in df_ac.iterrows():
+        raw.append({
+            "d":   r["data"].strftime("%d/%m/%y"),
+            "us":  r["utm_source"], "um": r["utm_medium"], "uc": r["utm_campaign"],
+            "uco": r["utm_content"], "ut": r["utm_term"],
+        })
+    # daily
+    agg = df_ac.groupby(df_ac["data"].dt.date).size().reset_index(name="q").sort_values("data")
+    daily = {"days":[pd.Timestamp(d).strftime("%d/%m/%y") for d in agg["data"]],
+             "leads":[int(q) for q in agg["q"]]}
+    # por_utm — contagem por dimensão (só valores não-vazios)
+    def cont(col):
+        s = df_ac[df_ac[col]!=""][col].value_counts()
+        return [{"v":str(k),"q":int(v)} for k,v in s.items()]
+    por_utm = {
+        "source":   cont("utm_source"),
+        "medium":   cont("utm_medium"),
+        "campaign": cont("utm_campaign"),
+        "content":  cont("utm_content"),
+        "term":     cont("utm_term"),
+    }
+    # cross — campanha → conjunto → criativo (contagem de leads reais)
+    cross = {}
+    for _, r in df_ac.iterrows():
+        c  = r["utm_campaign"] or "—"
+        cj = r["utm_medium"]   or "—"
+        cr = r["utm_content"]  or "—"
+        cross.setdefault(c, {"_q":0, "sets":{}})
+        cross[c]["_q"] += 1
+        cross[c]["sets"].setdefault(cj, {"_q":0, "ads":{}})
+        cross[c]["sets"][cj]["_q"] += 1
+        cross[c]["sets"][cj]["ads"][cr] = cross[c]["sets"][cj]["ads"].get(cr,0)+1
+    total = int(len(df_ac))
+    return {"raw":raw, "daily":daily, "por_utm":por_utm, "cross":cross, "total":total}
+
 def replace_js_const(html, name, value):
     pattern=rf"const {name}\s*=\s*(?:null|true|false|-?\d[\d\.]*|'[^']*'|\"[^\"]*\"|\{{[\s\S]*?\}}|\[[\s\S]*?\])\s*;"
     replacement=f"const {name} = {json.dumps(value,ensure_ascii=False)};"
@@ -805,7 +892,7 @@ def build_lpv_data(df):
     return result
 
 
-def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, lpv_data=None, vendas_data=None):
+def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, lpv_data=None, vendas_data=None, ac_data=None):
     html=Path(tpl).read_text(encoding="utf-8")
     html=replace_js_const(html,"META_KPIS",       meta_k)
     html=replace_js_const(html,"META_DAILY",       meta_d)
@@ -820,6 +907,8 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
         _lpv_modo = "leads"  # IP03 é captação
         html=re.sub(r"const LPV_MODO\s*=\s*[^;]+;", f"const LPV_MODO='{_lpv_modo}';", html, count=1)
     html=replace_js_const(html,"VENDAS_DATA", vendas_data if (USAR_VENDAS and vendas_data) else False)
+    html=replace_js_const(html,"AC_DATA", ac_data if (USAR_AC and ac_data) else False)
+    html=replace_js_const(html,"LCT_TERMOS", _LCT_TERMO_POR_LABEL)
     html=replace_js_const(html,"LANCAMENTO_CODS",  LANCAMENTO_CODS)
     html=replace_js_const(html,"LANCAMENTO_EM_CURSO", LANCAMENTO_EM_CURSO)
     html=replace_js_const(html,"MOSTRAR_VENDAS",  MOSTRAR_VENDAS)
@@ -919,10 +1008,18 @@ def main():
     else:
         print("  (desativada)")
 
+    ac_data=None
+    if USAR_AC:
+        try:
+            df_ac=load_active_campaign()
+            ac_data=build_ac_data(df_ac)
+        except Exception as e:
+            print(f"  ⚠ AC: {e}"); ac_data=None
+
     print("\n[HTML]")
     if not Path(TEMPLATE_FILE).exists():
         print(f"  ERRO: {TEMPLATE_FILE} não encontrado"); return
-    html=inject_all(TEMPLATE_FILE,m_k,m_d,m_dc,m_raw,m_t,m_bd,pes,lpv_data,vendas_data)
+    html=inject_all(TEMPLATE_FILE,m_k,m_d,m_dc,m_raw,m_t,m_bd,pes,lpv_data,vendas_data,ac_data)
     Path(OUTPUT_FILE).write_text(html,encoding="utf-8")
     print(f"  ✓ {OUTPUT_FILE} ({len(html)//1024}KB)")
 
