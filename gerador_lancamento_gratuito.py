@@ -26,6 +26,17 @@ COR_ACENTO       = "#B8860B"
 # Primeiro item = selecionado por padrão ao abrir o dashboard.
 LANCAMENTO_CODS  = [
     ("GR14",      "GR14",      True),   # 3º campo True = lançamento EM CURSO (marcação + default)
+    # Ocultos por ora — descomente para trazer de volta o botão do lançamento:
+    # ("VSL",       "VSL"),
+    # ("HUB4C",     "HUB_4C"),
+    # ("GR13",      "GR13"),
+    # ("GR12",      "GR12"),
+    # ("GR11",      "GR11"),
+    # ("GR10",      "GR10"),
+    # ("GR7",       "GR7"),
+    # ("PLF ABR26", "PLF_ABR26"),
+    # ("METEÓRICO", "METEORICO"),
+    # ("LM",        "[LM]"),
 ]
 USAR_PESQUISA    = False           # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
@@ -43,11 +54,11 @@ MOEDA            = "EUR"
 # ── Foco em VENDAS (VSL): CPV = custo por venda ──
 CPV_BOM          = 80.0   # Custo por Venda ≤ este → verde | até CPV_MEDIO → amarelo | acima → vermelho
 CPV_MEDIO        = 150.0
-CPL_BOM          = 9.06   # (mantido p/ retrocompat, não usado no foco vendas)
-CPL_MEDIO        = 12.0
-CTR_BOM          = 1.0    # CTR ≥ 1.2% → verde | 0.8-1.2% → amarelo | abaixo → vermelho
-CTR_MEDIO        = 0.8
-CR_BOM           = 65.0   # Connect Rate ≥ 40% → verde | 25-40% → amarelo | abaixo → vermelho
+CPL_BOM          = 17.01   # (mantido p/ retrocompat, não usado no foco vendas)
+CPL_MEDIO        = 20.0
+CTR_BOM          = 1.1    # CTR ≥ 1.2% → verde | 0.8-1.2% → amarelo | abaixo → vermelho
+CTR_MEDIO        = 0.7
+CR_BOM           = 67.0   # Connect Rate ≥ 40% → verde | 25-40% → amarelo | abaixo → vermelho
 CR_MEDIO         = 60.0
 TX_CONV_BOM      = 25.0   # (retrocompat)
 TX_CONV_MEDIO    = 18.0
@@ -56,8 +67,8 @@ CHECKOUT_BOM     = 8.0    # Taxa de Checkout (checkout/LPView) ≥ → verde
 CHECKOUT_MEDIO   = 4.0
 TXLP_BOM         = 3.0    # Taxa de Conversão LP (compra/LPView) ≥ → verde
 TXLP_MEDIO       = 1.5
-CPM_BOM          = 5.0    
-CPM_MEDIO        = 12.0
+CPM_BOM          = 15.0    
+CPM_MEDIO        = 20.0
 
 # ══════════════════════════════════════════════════════
 # Mapeamento de moeda → símbolo e label
