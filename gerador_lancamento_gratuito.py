@@ -5,7 +5,19 @@
 """
 
 import pandas as pd, json, re, hashlib, requests
-from datetime import date
+from datetime import date, datetime
+try:
+    from zoneinfo import ZoneInfo          # Python 3.9+
+    _TZ_MADRID = ZoneInfo("Europe/Madrid")
+except Exception:
+    _TZ_MADRID = None
+
+def hoje_madrid():
+    """Data de 'hoje' no fuso de Madrid (público Espanha) — alinha com o carimbo dos leads.
+       O GitHub Actions roda em UTC; sem isso, perto da meia-noite o 'hoje' cairia no dia errado."""
+    if _TZ_MADRID is not None:
+        return datetime.now(_TZ_MADRID).date()
+    return date.today()
 from pathlib import Path
 
 # ══════════════════════════════════════════════════════
@@ -384,7 +396,7 @@ def meta_tables_period(df, p, img_dir, camp_status=None, adset_status=None, ad_s
     return {"camps":camps,"adsets":adsets,"ads":ads}
 
 def meta_tables(df, img_dir):
-    hoje=pd.Timestamp(date.today())
+    hoje=pd.Timestamp(hoje_madrid())
     camp_status, adset_status, ad_status = build_status_maps(df)
     result={}
     for g in filter_groups():
@@ -398,7 +410,7 @@ def meta_tables(df, img_dir):
 
 def meta_breakdowns(df):
     print("  Lendo breakdowns...")
-    hoje_bd=pd.Timestamp(date.today())
+    hoje_bd=pd.Timestamp(hoje_madrid())
     AGE_ORDER=["18-24","25-34","35-44","45-54","55-64","65+"]
     def seg(agg,dim):
         agg=agg[agg["spend"]>0].copy()
@@ -927,7 +939,7 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
     html=replace_js_const(html,"LANCAMENTO_CODS",  LANCAMENTO_CODS)
     html=replace_js_const(html,"LANCAMENTO_EM_CURSO", LANCAMENTO_EM_CURSO)
     html=replace_js_const(html,"MOSTRAR_VENDAS",  MOSTRAR_VENDAS)
-    html=replace_js_const(html,"DATA_GERACAO",     date.today().strftime("%Y-%m-%d"))
+    html=replace_js_const(html,"DATA_GERACAO",     hoje_madrid().strftime("%Y-%m-%d"))
 
     _cpl_bom   = globals().get("CPL_BOM",   globals().get("CPA_BOM",   5.0))
     _cpl_medio = globals().get("CPL_MEDIO", globals().get("CPA_MEDIO", 10.0))
@@ -960,7 +972,7 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
     ]:
         html=re.sub(rf"const {k}\s*=\s*[^;]+;", f"const {k}={v};", html, count=1)
 
-    html=re.sub(r"\d{2}/\d{2}/\d{4} · via planilha", date.today().strftime("%d/%m/%Y")+" · via planilha", html)
+    html=re.sub(r"\d{2}/\d{2}/\d{4} · via planilha", hoje_madrid().strftime("%d/%m/%Y")+" · via planilha", html)
     return html
 
 # ══ MAIN ═══════════════════════════════════════════════
@@ -1041,7 +1053,7 @@ def main():
     data_json={
         "cliente":NOME_CLIENTE,"cor":COR_ACENTO,"letra":LOGO_LETRA,
         "lancamentos":LANCAMENTO_CODS,"moeda":MOEDA,"moeda_simbolo":MOEDA_SIMBOLO,
-        "atualizado":date.today().strftime("%d/%m/%Y"),
+        "atualizado":hoje_madrid().strftime("%d/%m/%Y"),
         "kpis":{
             "spend":m_k[_g0].get("spend"),
             "leads":m_k[_g0].get("leads"),
