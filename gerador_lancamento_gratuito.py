@@ -727,7 +727,8 @@ def load_active_campaign():
     ren = {}
     for c in df.columns:
         cl = str(c).strip().lower()
-        if cl == "data": ren[c] = "data"
+        if cl == "data de entrada": ren[c] = "data_entrada"   # coluna N carimbada pelo Apps Script
+        elif cl == "data": ren[c] = "data"                     # coluna A (data que vem do AC)
         elif cl in ("data e hora","data_hora","datahora"): ren[c] = "data_hora"
         elif cl == "email": ren[c] = "email"
         elif cl.startswith("utm_source"):   ren[c] = "utm_source"
@@ -736,12 +737,15 @@ def load_active_campaign():
         elif cl.startswith("utm_term"):     ren[c] = "utm_term"
         elif cl.startswith("utm_content"):  ren[c] = "utm_content"
     df = df.rename(columns=ren)
-    if "data" not in df.columns:
-        print("     ⚠ aba sem coluna Data"); return None
-    df["data"] = pd.to_datetime(df["data"], errors="coerce", dayfirst=False)
-    # fallback: se 'data' falhar, tenta 'data_hora'
-    if df["data"].isna().all() and "data_hora" in df.columns:
-        df["data"] = pd.to_datetime(df["data_hora"], errors="coerce", dayfirst=True)
+    # DATA usada no dashboard = "Data de Entrada" (coluna N, carimbada pelo script na entrada real
+    # no lançamento). Cai para a coluna "Data" (A) quando a de entrada estiver vazia — cobre as linhas
+    # antigas já corrigidas manualmente. NUNCA usar "Data e hora" (cdate = criação do contato, traz
+    # datas antigas de quem já era contato). Formato BR dd/mm/aaaa → dayfirst=True.
+    if "data_entrada" not in df.columns and "data" not in df.columns:
+        print("     ⚠ aba sem coluna de data"); return None
+    _de = pd.to_datetime(df["data_entrada"], errors="coerce", dayfirst=True) if "data_entrada" in df.columns else pd.Series(pd.NaT, index=df.index)
+    _da = pd.to_datetime(df["data"],         errors="coerce", dayfirst=True) if "data" in df.columns else pd.Series(pd.NaT, index=df.index)
+    df["data"] = _de.fillna(_da)   # prioriza Data de Entrada; usa Data como reserva
     df = df.dropna(subset=["data"])
     for u in ["utm_source","utm_medium","utm_campaign","utm_term","utm_content"]:
         if u not in df.columns: df[u] = ""
