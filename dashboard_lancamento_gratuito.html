@@ -330,6 +330,7 @@ details.desk-only{display:block!important;}
 .crm-utm-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--border);font-size:11px;}
 .crm-utm-row:first-of-type{border-top:none;}
 .crm-utm-name{flex:1;min-width:0;overflow-wrap:anywhere;word-break:break-word;white-space:normal;font-weight:600;line-height:1.3;}
+.crm-utm-pct{font-size:9px;color:var(--muted2);min-width:30px;text-align:right;font-variant-numeric:tabular-nums;}
 .crm-utm-bar{height:5px;border-radius:3px;background:var(--accent,#B8860B);opacity:.85;min-width:3px;}
 .crm-utm-q{font-weight:700;min-width:26px;text-align:right;}
 .crm-utm-cpl{min-width:64px;text-align:right;color:var(--muted);font-size:10px;}
@@ -758,6 +759,10 @@ const TRANSLATIONS = {
     crm_kpi_leads_pago_sub:'tráfego (meta-ads)',
     crm_kpi_leads_org:    'Leads Orgânicos',
     crm_kpi_leads_org_sub:'fora do tráfego pago',
+    crm_kpi_cpl_pago:     'CPL · Pagos',
+    crm_kpi_cpl_pago_sub: 'Invest. ÷ leads pagos',
+    crm_kpi_cpl_total:    'CPL · Total',
+    crm_kpi_cpl_total_sub:'Invest. ÷ todos os leads',
     crm_kpi_leads_sub:'capturados no CRM',
     crm_kpi_invest:   'Investimento',
     crm_kpi_cpl:      'CPL Real',
@@ -934,6 +939,10 @@ const TRANSLATIONS = {
     crm_kpi_leads_pago_sub:'tráfico (meta-ads)',
     crm_kpi_leads_org:    'Leads Orgánicos',
     crm_kpi_leads_org_sub:'fuera del tráfico pagado',
+    crm_kpi_cpl_pago:     'CPL · Pagados',
+    crm_kpi_cpl_pago_sub: 'Inversión ÷ leads pagados',
+    crm_kpi_cpl_total:    'CPL · Total',
+    crm_kpi_cpl_total_sub:'Inversión ÷ todos los leads',
     crm_kpi_leads_sub:'capturados en el CRM',
     crm_kpi_invest:   'Inversión',
     crm_kpi_cpl:      'CPL Real',
@@ -2671,16 +2680,19 @@ function renderCrm(){
   const rowsPago=acRowsPeriodo('pago');       // tráfego pago (meta-ads) — base do CPL
   const rowsOrg =acRowsPeriodo('organico');   // orgânicos (source != meta-ads)
   const nPago=rowsPago.length, nOrg=rowsOrg.length;
+  const nTotal=nPago+nOrg;
   const invest=acInvestPeriodo();
-  const cplReal=nPago>0?invest/nPago:null;
+  const cplPago =nPago>0 ?invest/nPago :null;   // CPL sobre tráfego pago (real)
+  const cplTotal=nTotal>0?invest/nTotal:null;   // CPL diluído por todos os leads (pago+orgânico)
 
   const kpiEl=document.getElementById('crmKpis');
-  kpiEl.classList.remove('k3'); kpiEl.classList.add('k4');
+  kpiEl.classList.remove('k3','k4'); kpiEl.classList.add('k5');
   kpiEl.innerHTML=`
     <div class="kpi" style="--kc:#334155"><div class="kpi-lbl">${t('crm_kpi_invest')}</div><div class="kpi-val">${fR(invest)}</div><div class="kpi-sub">Meta Ads</div></div>
     <div class="kpi" style="--kc:#3b82f6"><div class="kpi-lbl">${t('crm_kpi_leads_pago')}</div><div class="kpi-val">${fN(nPago)}</div><div class="kpi-sub">${t('crm_kpi_leads_pago_sub')}</div></div>
     <div class="kpi" style="--kc:#16a34a"><div class="kpi-lbl">${t('crm_kpi_leads_org')}</div><div class="kpi-val">${fN(nOrg)}</div><div class="kpi-sub">${t('crm_kpi_leads_org_sub')}</div></div>
-    <div class="kpi" style="--kc:#dc2626"><div class="kpi-lbl">${t('crm_kpi_cpl')}</div><div class="kpi-val">${cplReal!=null?fR(cplReal):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_sub')}</div></div>`;
+    <div class="kpi" style="--kc:#dc2626"><div class="kpi-lbl">${t('crm_kpi_cpl_pago')}</div><div class="kpi-val">${cplPago!=null?fR(cplPago):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_pago_sub')}</div></div>
+    <div class="kpi" style="--kc:#d97706"><div class="kpi-lbl">${t('crm_kpi_cpl_total')}</div><div class="kpi-val">${cplTotal!=null?fR(cplTotal):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_total_sub')}</div></div>`;
 
   const rowsTodos=acRowsPeriodo('todos');   // relatório do Active = TODOS os leads (pago + orgânico)
   renderCrmDaily(rowsTodos);
@@ -2731,6 +2743,8 @@ function renderCrmUtmPanels(rows, invest){
     const max=Math.max(...items.map(i=>i.q));
     const linhas=items.map(it=>{
       const w=Math.round(it.q/max*100);
+      const pct=total>0?(it.q/total*100):0;          // % sobre o total de leads do painel
+      const pctTxt=(pct>=10?Math.round(pct):pct.toFixed(1))+'%';
       let cpl='';
       if(p.investMap){
         const inv=p.investMap[it.v]!=null?p.investMap[it.v]:_matchInvest(p.investMap,it.v);
@@ -2739,6 +2753,7 @@ function renderCrmUtmPanels(rows, invest){
       }
       return `<div class="crm-utm-row">
         <span class="crm-utm-name" title="${it.v}">${it.v}</span>
+        <span class="crm-utm-pct">${pctTxt}</span>
         <span class="crm-utm-bar" style="width:${Math.max(w*0.6,4)}px"></span>
         <span class="crm-utm-q">${it.q}</span>
         ${cpl}
