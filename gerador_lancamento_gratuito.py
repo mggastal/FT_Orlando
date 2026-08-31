@@ -50,7 +50,7 @@ LANCAMENTO_CODS  = [
     # ("METEÓRICO", "METEORICO"),
     # ("LM",        "[LM]"),
 ]
-USAR_PESQUISA    = False           # False = oculta aba Pesquisa
+USAR_PESQUISA    = True           # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
 USAR_AC          = True            # True = ativa aba ActiveCampaign (CRM) + cruzamento UTM
 LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = desativa aba
