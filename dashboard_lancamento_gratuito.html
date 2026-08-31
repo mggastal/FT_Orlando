@@ -754,6 +754,10 @@ const TRANSLATIONS = {
     crm_daily_ttl:    'Leads Reais por Dia (CRM)',
     crm_daily_sub:    'Leads capturados no ActiveCampaign · adapta ao período',
     crm_kpi_leads:    'Leads Reais',
+    crm_kpi_leads_pago:   'Leads Pagos',
+    crm_kpi_leads_pago_sub:'tráfego (meta-ads)',
+    crm_kpi_leads_org:    'Leads Orgânicos',
+    crm_kpi_leads_org_sub:'fora do tráfego pago',
     crm_kpi_leads_sub:'capturados no CRM',
     crm_kpi_invest:   'Investimento',
     crm_kpi_cpl:      'CPL Real',
@@ -926,6 +930,10 @@ const TRANSLATIONS = {
     crm_daily_ttl:    'Leads Reales por Día (CRM)',
     crm_daily_sub:    'Leads capturados en ActiveCampaign · se adapta al período',
     crm_kpi_leads:    'Leads Reales',
+    crm_kpi_leads_pago:   'Leads Pagados',
+    crm_kpi_leads_pago_sub:'tráfico (meta-ads)',
+    crm_kpi_leads_org:    'Leads Orgánicos',
+    crm_kpi_leads_org_sub:'fuera del tráfico pagado',
     crm_kpi_leads_sub:'capturados en el CRM',
     crm_kpi_invest:   'Inversión',
     crm_kpi_cpl:      'CPL Real',
@@ -2630,16 +2638,25 @@ function _acInPeriodo(dstr){
   return true;
 }
 // leads reais do período, respeitando o lançamento ativo (casa utm_campaign com o termo do lançamento)
-function acRowsPeriodo(){
+function _isPago(r){ return String(r.us||'').trim().toLowerCase()==='meta-ads'; }
+// modo: 'pago' (só utm_source=meta-ads — usado em CPL/funil/temperatura/métricas/LP),
+//       'organico' (source != meta-ads), 'todos' (ambos). Default = 'pago'.
+function acRowsPeriodo(modo){
   if(!AC_DATA||!AC_DATA.raw) return [];
+  modo = modo || 'pago';
   const termo=(filtroAtivo && filtroAtivo!=='all' && typeof LCT_TERMOS!=='undefined')?(LCT_TERMOS[filtroAtivo]||filtroAtivo):null;
-  // se o usuário selecionou campanhas no filtro do Meta, os leads reais devem casar
-  // o utm_campaign (r.uc) com essas MESMAS campanhas — senão o investimento cai mas os leads não
   const campSel=(typeof metaCampSel!=='undefined' && metaCampSel && metaCampSel.size>0)?metaCampSel:null;
   return AC_DATA.raw.filter(r=>{
     if(!_acInPeriodo(r.d)) return false;
-    if(campSel){ return campSel.has(r.uc); }
-    if(termo){ return String(r.uc||'').toLowerCase().includes(String(termo).toLowerCase()); }
+    // filtro de origem: leads orgânicos NÃO entram no CPL (só tráfego pago = meta-ads)
+    if(modo==='pago' && !_isPago(r)) return false;
+    if(modo==='organico' && _isPago(r)) return false;
+    // leads pagos respeitam o lançamento/campanha selecionados (via utm_campaign);
+    // orgânicos não têm campanha de tráfego, então no modo 'todos'/'organico' não filtram por isso
+    if(_isPago(r)){
+      if(campSel){ return campSel.has(r.uc); }
+      if(termo){ return String(r.uc||'').toLowerCase().includes(String(termo).toLowerCase()); }
+    }
     return true;
   });
 }
@@ -2651,19 +2668,23 @@ function acInvestPeriodo(){
 
 function renderCrm(){
   if(!AC_DATA){ return; }
-  const rows=acRowsPeriodo();
-  const totalLeads=rows.length;
+  const rowsPago=acRowsPeriodo('pago');       // tráfego pago (meta-ads) — base do CPL
+  const rowsOrg =acRowsPeriodo('organico');   // orgânicos (source != meta-ads)
+  const nPago=rowsPago.length, nOrg=rowsOrg.length;
   const invest=acInvestPeriodo();
-  const cplReal=totalLeads>0?invest/totalLeads:null;
+  const cplReal=nPago>0?invest/nPago:null;
 
-  // KPIs
-  document.getElementById('crmKpis').innerHTML=`
+  const kpiEl=document.getElementById('crmKpis');
+  kpiEl.classList.remove('k3'); kpiEl.classList.add('k4');
+  kpiEl.innerHTML=`
     <div class="kpi" style="--kc:#334155"><div class="kpi-lbl">${t('crm_kpi_invest')}</div><div class="kpi-val">${fR(invest)}</div><div class="kpi-sub">Meta Ads</div></div>
-    <div class="kpi" style="--kc:#3b82f6"><div class="kpi-lbl">${t('crm_kpi_leads')}</div><div class="kpi-val">${fN(totalLeads)}</div><div class="kpi-sub">${t('crm_kpi_leads_sub')}</div></div>
+    <div class="kpi" style="--kc:#3b82f6"><div class="kpi-lbl">${t('crm_kpi_leads_pago')}</div><div class="kpi-val">${fN(nPago)}</div><div class="kpi-sub">${t('crm_kpi_leads_pago_sub')}</div></div>
+    <div class="kpi" style="--kc:#16a34a"><div class="kpi-lbl">${t('crm_kpi_leads_org')}</div><div class="kpi-val">${fN(nOrg)}</div><div class="kpi-sub">${t('crm_kpi_leads_org_sub')}</div></div>
     <div class="kpi" style="--kc:#dc2626"><div class="kpi-lbl">${t('crm_kpi_cpl')}</div><div class="kpi-val">${cplReal!=null?fR(cplReal):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_sub')}</div></div>`;
 
-  renderCrmDaily(rows);
-  renderCrmUtmPanels(rows, invest);
+  const rowsTodos=acRowsPeriodo('todos');   // relatório do Active = TODOS os leads (pago + orgânico)
+  renderCrmDaily(rowsTodos);
+  renderCrmUtmPanels(rowsTodos, invest);
 }
 
 function renderCrmDaily(rows){
