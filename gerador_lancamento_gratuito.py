@@ -998,7 +998,19 @@ def main():
     m_bd=meta_breakdowns(df_meta)
     _g0 = LANCAMENTO_CODS[0] if LANCAMENTO_CODS else "all"
     total_leads=m_k[_g0]["leads"]
-    print(f"  ✓ {total_leads} leads [{_g0}] | {MOEDA_SIMBOLO} {m_k[_g0]['spend']:,.2f} invest.")
+    print(f"  ✓ {total_leads} leads Meta [{_g0}] | {MOEDA_SIMBOLO} {m_k[_g0]['spend']:,.2f} invest.")
+
+    # ActiveCampaign (CRM) carregado ANTES da Pesquisa p/ que o "total de leads" da aba
+    # Pesquisa use os leads REAIS do CRM (não os do Meta)
+    ac_data=None
+    if USAR_AC:
+        try:
+            df_ac=load_active_campaign()
+            ac_data=build_ac_data(df_ac)
+        except Exception as e:
+            print(f"  ⚠ AC: {e}"); ac_data=None
+    if ac_data and ac_data.get("total") is not None:
+        total_leads = ac_data["total"]   # total real do CRM p/ a taxa de resposta da Pesquisa
 
     print("\n[PESQUISA]")
     if USAR_PESQUISA:
@@ -1039,14 +1051,6 @@ def main():
             print(f"  ⚠ {e}"); vendas_data = None
     else:
         print("  (desativada)")
-
-    ac_data=None
-    if USAR_AC:
-        try:
-            df_ac=load_active_campaign()
-            ac_data=build_ac_data(df_ac)
-        except Exception as e:
-            print(f"  ⚠ AC: {e}"); ac_data=None
 
     print("\n[HTML]")
     if not Path(TEMPLATE_FILE).exists():
