@@ -50,7 +50,7 @@ LANCAMENTO_CODS  = [
     # ("METEÓRICO", "METEORICO"),
     # ("LM",        "[LM]"),
 ]
-USAR_PESQUISA    = True           # False = oculta aba Pesquisa
+USAR_PESQUISA    = True            # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
 USAR_AC          = True            # True = ativa aba ActiveCampaign (CRM) + cruzamento UTM
 LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = desativa aba
@@ -493,14 +493,17 @@ def load_pesquisa():
 
 def pesquisa_process(df, total_leads):
     UTM_COLS=["utm_source","utm_medium","utm_campaign","utm_content"]
-    SKIP_COLS=set(UTM_COLS+["Carimbo de data/hora","Timestamp","Email","email",
+    SKIP_COLS=set(UTM_COLS+["utm_term","Carimbo de data/hora","Timestamp","Email","email",
+                             "Dirección de correo electrónico","Correo electrónico","Correo",
                              "Qual seu e-mail de cadastro no evento?",
                              "Qual seu primeiro nome?","Qual seu whatsapp?",
                              "Nome","nome","ID","id","Unnamed: 0"])
     # Palavras que indicam campo de identificação livre (não é pergunta de múltipla escolha)
-    _ID_HINTS=("nome","name","email","e-mail","mail","whats","telefone","phone",
+    _ID_HINTS=("nome","name","email","e-mail","mail","correo","whats","telefone","phone",
                "celular","cpf","data","hora","carimbo","timestamp","marca temporal",
-               "marca de tiempo","fecha","sello")
+               "marca de tiempo","fecha","sello","utm_",
+               "exprésate","expresate","política de privacidad","politica de privacidad",
+               "columna","unnamed")
     def _is_pergunta(c):
         if c in SKIP_COLS or c.lower().startswith("unnamed"): return False
         if not str(c).strip(): return False
@@ -515,7 +518,8 @@ def pesquisa_process(df, total_leads):
         # descarta perguntas "abertas": quando a maioria das respostas é única
         # (nome, e-mail, etc. que escaparam das dicas acima). Limiar: >60% únicas
         # e com pelo menos 8 respostas para evitar falso-positivo em amostras pequenas.
-        if n>=8 and (nun/n)>0.6: return False
+        # descarta perguntas abertas só quando há amostra suficiente p/ confiar no sinal
+        if n>=10 and (nun/n)>0.7: return False
         return True
     PERGUNTAS=[c for c in df.columns if _is_pergunta(c)]
     def _clean_q(s): return " ".join(str(s).split())  # remove \n e espaços duplos
@@ -565,7 +569,8 @@ def pesquisa_process(df, total_leads):
         _dt=pd.to_datetime(df[_date_col], errors="coerce", dayfirst=True)
         _por_dia=_dt.dropna().dt.strftime("%d/%m/%y").value_counts()
         def _dk(s):
-            dd,mm=s.split("/"); return int(mm)*100+int(dd)
+            p=s.split("/"); dd=int(p[0]); mm=int(p[1]); yy=int(p[2]) if len(p)>2 else 0
+            return yy*10000+mm*100+dd
         for d in sorted(_por_dia.index, key=_dk):
             resp_por_dia.append({"d":d,"n":int(_por_dia[d])})
         # rows recebem a data para permitir filtro por período no front
