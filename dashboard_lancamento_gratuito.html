@@ -1959,14 +1959,22 @@ function renderDiario(){
 }
 
 function renderDiarioCharts(){
-  const md=getDailyForCamp()||getMD();
+  let md=getDailyForCamp()||getMD();
   if(!md) return;
+  const _temACd=(typeof AC_DATA!=='undefined'&&AC_DATA&&AC_DATA!==false);
+  // injeta leads reais do CRM por dia → CPL e Tx.Conv passam a usar leads reais (não Meta)
+  if(_temACd){
+    const rows=(typeof acRowsPeriodo==='function')?acRowsPeriodo():[];
+    const leadsReaisDia=(md.days||[]).map(d=>rows.filter(r=>r.d===d).length);
+    md=Object.assign({}, md, {leadsReais:leadsReaisDia});
+  }
   const mg=aggGran(md);
 
   const totImp = (md.impressions||[]).reduce((a,b)=>a+(b||0),0);
   const totLc  = (md.link_clicks||[]).reduce((a,b)=>a+(b||0),0);
   const totPv  = (md.page_view||[]).reduce((a,b)=>a+(b||0),0);
-  const totLd  = (md.leads||[]).reduce((a,b)=>a+(b||0),0);
+  const totLdMeta = (md.leads||[]).reduce((a,b)=>a+(b||0),0);
+  const totLd  = _temACd ? (md.leadsReais||[]).reduce((a,b)=>a+(b||0),0) : totLdMeta;  // leads reais p/ CPL e Tx.Conv
   const totSp  = (md.spend||[]).reduce((a,b)=>a+(b||0),0);
   const avgCTR = totImp>0 ? r2(totLc/totImp*100)  : null;
   const avgCR  = totLc>0  ? r2(totPv/totLc*100)   : null;
@@ -1991,12 +1999,19 @@ function renderDiarioCharts(){
   }
 
   // Labels traduzidos para o eixo Y dos gráficos
+  // séries de CPL e Tx.Conv recalculadas com leads REAIS por bucket (quando há AC)
+  const cplSerie = _temACd
+    ? (mg.days||[]).map((d,i)=>{ const l=(mg.leadsReais||[])[i]||0; const sp=(mg.spend||[])[i]||0; return l>0?r2(sp/l):null; })
+    : mg.cpl;
+  const txSerie = _temACd
+    ? (mg.days||[]).map((d,i)=>{ const l=(mg.leadsReais||[])[i]||0; const pv=(mg.page_view||[])[i]||0; return pv>0?r2(l/pv*100):null; })
+    : mg.tx_conv;
   const METRICS=[
     {id:'ctr',  ttl:'CTR (%)',                                 suffix:'%', data:()=>mg.ctr},
     {id:'cpm',  ttl:`CPM (${MOEDA_SIMBOLO})`,                  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>mg.cpm},
-    {id:'cpl',  ttl:`${t('kpi_cpl_sub')} (${MOEDA_SIMBOLO})`,  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>mg.cpl},
+    {id:'cpl',  ttl:`${t('kpi_cpl_sub')} (${MOEDA_SIMBOLO})`,  suffix:'',  fmt:v=>v!=null?fR(v):null, data:()=>cplSerie},
     {id:'cr',   ttl:'Connect Rate (%)',                        suffix:'%', data:()=>mg.connect_rate},
-    {id:'tx_cv',ttl:(currentLang==='ES'?'Tasa Conversión (%)':'Taxa Conversão (%)'), suffix:'%', data:()=>mg.tx_conv},
+    {id:'tx_cv',ttl:(currentLang==='ES'?'Tasa Conversión (%)':'Taxa Conversão (%)'), suffix:'%', data:()=>txSerie},
   ];
 
   const el=document.getElementById('dailyCharts');
