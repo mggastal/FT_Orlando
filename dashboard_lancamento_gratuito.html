@@ -2332,7 +2332,11 @@ function buildLctBar(){
     const isLive=emCurso.includes(cod);
     const badge=isLive?`<span class="lct-live"><span class="lct-live-dot"></span>${t('lct_em_curso')}</span>`:'';
     return `<button class="lct-btn${filtroAtivo===cod?' active':''}${isLive?' is-live':''}" onclick="setFiltroAtivo('${cod.replace(/'/g,"\\'")}',this)">${cod}${badge}</button>`;
-  }).join('')+`<button class="lct-btn${filtroAtivo==='all'?' active':''}" id="btnLctAll" onclick="setFiltroAtivo('all',this)">${t('lct_tudo')}</button>`;
+  }).join('')
+    // botão "Tudo" só faz sentido com mais de um lançamento; com um só, ele = o próprio lançamento
+    + (LANCAMENTO_CODS.length>1 ? `<button class="lct-btn${filtroAtivo==='all'?' active':''}" id="btnLctAll" onclick="setFiltroAtivo('all',this)">${t('lct_tudo')}</button>` : '');
+  // com um único lançamento, garante que ele seja o filtro ativo (não 'all')
+  if(LANCAMENTO_CODS.length===1 && filtroAtivo==='all'){ filtroAtivo=LANCAMENTO_CODS[0]; }
 }
 
 function setGran(g,btn){
