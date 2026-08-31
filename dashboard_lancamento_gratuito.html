@@ -604,8 +604,8 @@ const LOGO_LETRA='SC';
 const COR_ACENTO='#B8860B';
 const MOEDA_SIMBOLO='€';
 const MOEDA_COD='EUR';
-const CPL_BOM=17.01;
-const CPL_MEDIO=20.0;
+const CPL_BOM=18.56;
+const CPL_MEDIO=21.84;
 const CTR_BOM=1.1;
 const CTR_MEDIO=0.7;
 const CR_BOM=67.0;
@@ -2684,6 +2684,8 @@ function renderCrm(){
   const invest=acInvestPeriodo();
   const cplPago =nPago>0 ?invest/nPago :null;   // CPL sobre tráfego pago (real)
   const cplTotal=nTotal>0?invest/nTotal:null;   // CPL diluído por todos os leads (pago+orgânico)
+  const _corCPL=v=>v!=null?(v<=CPL_BOM?'#059669':v<=CPL_MEDIO?'#d97706':'#dc2626'):'var(--muted)';
+  const corPago=_corCPL(cplPago), corTotal=_corCPL(cplTotal);
 
   const kpiEl=document.getElementById('crmKpis');
   kpiEl.classList.remove('k3','k4'); kpiEl.classList.add('k5');
@@ -2691,8 +2693,8 @@ function renderCrm(){
     <div class="kpi" style="--kc:#334155"><div class="kpi-lbl">${t('crm_kpi_invest')}</div><div class="kpi-val">${fR(invest)}</div><div class="kpi-sub">Meta Ads</div></div>
     <div class="kpi" style="--kc:#3b82f6"><div class="kpi-lbl">${t('crm_kpi_leads_pago')}</div><div class="kpi-val">${fN(nPago)}</div><div class="kpi-sub">${t('crm_kpi_leads_pago_sub')}</div></div>
     <div class="kpi" style="--kc:#16a34a"><div class="kpi-lbl">${t('crm_kpi_leads_org')}</div><div class="kpi-val">${fN(nOrg)}</div><div class="kpi-sub">${t('crm_kpi_leads_org_sub')}</div></div>
-    <div class="kpi" style="--kc:#dc2626"><div class="kpi-lbl">${t('crm_kpi_cpl_pago')}</div><div class="kpi-val">${cplPago!=null?fR(cplPago):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_pago_sub')}</div></div>
-    <div class="kpi" style="--kc:#d97706"><div class="kpi-lbl">${t('crm_kpi_cpl_total')}</div><div class="kpi-val">${cplTotal!=null?fR(cplTotal):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_total_sub')}</div></div>`;
+    <div class="kpi" style="--kc:${corPago}"><div class="kpi-lbl">${t('crm_kpi_cpl_pago')}</div><div class="kpi-val" style="color:${corPago}">${cplPago!=null?fR(cplPago):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_pago_sub')}</div></div>
+    <div class="kpi" style="--kc:${corTotal}"><div class="kpi-lbl">${t('crm_kpi_cpl_total')}</div><div class="kpi-val" style="color:${corTotal}">${cplTotal!=null?fR(cplTotal):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_total_sub')}</div></div>`;
 
   const rowsTodos=acRowsPeriodo('todos');   // relatório do Active = TODOS os leads (pago + orgânico)
   renderCrmDaily(rowsTodos);
