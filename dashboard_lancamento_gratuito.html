@@ -1566,13 +1566,16 @@ function _casaTol(metaNome, utmNome){
   if(!a||!b) return false;
   return a===b || a.startsWith(b) || b.startsWith(a);
 }
-// conta leads reais (período ativo) que casam campanha (exato) + [conjunto] + [criativo] (tolerante).
+// conta leads reais (período ativo) que casam campanha + [conjunto] + [criativo].
+// Match EXATO nos 3 níveis: o CRM guarda o utm exatamente; um conjunto/criativo do Meta com sufixo
+// que o CRM não registra (ex "-AD_ORLANDO") fica com 0 leads reais em vez de roubar os do irmão —
+// senão dois nomes casariam os mesmos leads e a soma dos conjuntos passaria a da campanha.
 function acLeadsCount(campName, setName, adName){
   const rows=(typeof acRowsPeriodo==='function')?acRowsPeriodo():[];
   return rows.filter(r=>{
     if(campName && !_casaExato(campName, r.uc)) return false;
-    if(setName!=null && !_casaTol(setName, r.um)) return false;
-    if(adName!=null && !_casaTol(adName, r.uco)) return false;
+    if(setName!=null && !_casaExato(setName, r.um)) return false;
+    if(adName!=null && !_casaExato(adName, r.uco)) return false;
     return true;
   }).length;
 }
