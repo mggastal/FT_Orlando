@@ -1552,21 +1552,27 @@ function getMBD(){
 
 // ═══ CRUZAMENTO: leads reais (CRM) por campanha/conjunto/criativo ═══
 function _temAC(){ return (typeof AC_DATA!=='undefined' && AC_DATA && AC_DATA!==false); }
-// normaliza nome p/ casar Meta (adset/ad) com utm do CRM, tolerando sufixos tipo "-AD_ORLANDO"
 function _norm(s){ return String(s||'').trim().toLowerCase(); }
-function _casaNome(metaNome, utmNome){
+// campanha: match EXATO — nomes de campanha são completos e distintos; substring causaria
+// dupla contagem (ex: "...-TT-VD" está contido em "...-TT-VD-LP_A").
+function _casaExato(metaNome, utmNome){
+  const a=_norm(metaNome), b=_norm(utmNome);
+  return !!a && !!b && a===b;
+}
+// conjunto/criativo: match TOLERANTE a sufixo — o nome no Meta às vezes tem sufixo (ex "-AD_ORLANDO")
+// que o utm do CRM não registra. Ancorado no início p/ evitar casar um subconjunto no meio.
+function _casaTol(metaNome, utmNome){
   const a=_norm(metaNome), b=_norm(utmNome);
   if(!a||!b) return false;
-  return a===b || a.startsWith(b) || b.startsWith(a) || a.includes(b) || b.includes(a);
+  return a===b || a.startsWith(b) || b.startsWith(a);
 }
-// conta leads reais (período ativo) que casam campanha + [conjunto] + [criativo].
-// Casamento tolerante a sufixo pq o nome no Meta (adset/ad) às vezes tem sufixo que o utm do CRM não tem.
+// conta leads reais (período ativo) que casam campanha (exato) + [conjunto] + [criativo] (tolerante).
 function acLeadsCount(campName, setName, adName){
   const rows=(typeof acRowsPeriodo==='function')?acRowsPeriodo():[];
   return rows.filter(r=>{
-    if(campName && !_casaNome(campName, r.uc)) return false;
-    if(setName!=null && !_casaNome(setName, r.um)) return false;
-    if(adName!=null && !_casaNome(adName, r.uco)) return false;
+    if(campName && !_casaExato(campName, r.uc)) return false;
+    if(setName!=null && !_casaTol(setName, r.um)) return false;
+    if(adName!=null && !_casaTol(adName, r.uco)) return false;
     return true;
   }).length;
 }
