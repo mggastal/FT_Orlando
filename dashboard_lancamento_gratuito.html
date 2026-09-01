@@ -1552,35 +1552,29 @@ function getMBD(){
 
 // ═══ CRUZAMENTO: leads reais (CRM) por campanha/conjunto/criativo ═══
 function _temAC(){ return (typeof AC_DATA!=='undefined' && AC_DATA && AC_DATA!==false); }
-function _acLeadsIndex(){
-  // constrói índice {campanha, conjunto, criativo} → contagem, para o período ativo
+// normaliza nome p/ casar Meta (adset/ad) com utm do CRM, tolerando sufixos tipo "-AD_ORLANDO"
+function _norm(s){ return String(s||'').trim().toLowerCase(); }
+function _casaNome(metaNome, utmNome){
+  const a=_norm(metaNome), b=_norm(utmNome);
+  if(!a||!b) return false;
+  return a===b || a.startsWith(b) || b.startsWith(a) || a.includes(b) || b.includes(a);
+}
+// conta leads reais (período ativo) que casam campanha + [conjunto] + [criativo].
+// Casamento tolerante a sufixo pq o nome no Meta (adset/ad) às vezes tem sufixo que o utm do CRM não tem.
+function acLeadsCount(campName, setName, adName){
   const rows=(typeof acRowsPeriodo==='function')?acRowsPeriodo():[];
-  const idx={camp:{}, set:{}, ad:{}, setByCamp:{}, adByCamp:{}};
-  rows.forEach(r=>{
-    const uc=r.uc||'', um=r.um||'', uco=r.uco||'';
-    if(uc)  idx.camp[uc]=(idx.camp[uc]||0)+1;
-    if(um)  idx.set[um]=(idx.set[um]||0)+1;
-    if(uco) idx.ad[uco]=(idx.ad[uco]||0)+1;
-    // conjunto por campanha e criativo por campanha (chave composta)
-    if(uc&&um){ const k=uc+'||'+um; idx.setByCamp[k]=(idx.setByCamp[k]||0)+1; }
-    if(uc&&uco){ const k=uc+'||'+uco; idx.adByCamp[k]=(idx.adByCamp[k]||0)+1; }
-  });
-  return idx;
+  return rows.filter(r=>{
+    if(campName && !_casaNome(campName, r.uc)) return false;
+    if(setName!=null && !_casaNome(setName, r.um)) return false;
+    if(adName!=null && !_casaNome(adName, r.uco)) return false;
+    return true;
+  }).length;
 }
-// leads reais de uma campanha
-function acLeadsCamp(campName){ return _acLeadsIndex().camp[campName]||0; }
-// leads reais de um conjunto dentro de uma campanha (usa nome do conjunto = utm_medium)
-function acLeadsSet(campName,setName){
-  const idx=_acLeadsIndex();
-  const k=campName+'||'+setName;
-  return idx.setByCamp[k]!=null?idx.setByCamp[k]:(idx.set[setName]||0);
-}
-// leads reais de um criativo dentro de uma campanha (nome criativo = utm_content = Ad Name)
-function acLeadsAd(campName,adName){
-  const idx=_acLeadsIndex();
-  const k=campName+'||'+adName;
-  return idx.adByCamp[k]!=null?idx.adByCamp[k]:(idx.ad[adName]||0);
-}
+function acLeadsCamp(campName){ return acLeadsCount(campName, null, null); }
+// conjunto dentro da campanha
+function acLeadsSet(campName,setName){ return acLeadsCount(campName, setName, null); }
+// criativo dentro do conjunto E da campanha (os 3 níveis amarrados)
+function acLeadsAd(campName,adName,setName){ return acLeadsCount(campName, setName!=null?setName:null, adName); }
 function _cplReal(spend,leadsReais){ return (leadsReais>0)?spend/leadsReais:null; }
 
 function buildTable(elId,data,mainCol){
@@ -1768,7 +1762,7 @@ function toggleAdsetRow(campId,adsetName,campName,rowEl){
           <td class="num" style="font-size:10px;padding:5px 8px">${fN(ad.ld)}</td>
           <td class="num ${funnelCls(ad.ctr,CTR_BOM,CTR_MEDIO).cls}" style="font-size:10px;padding:5px 8px">${fP(ad.ctr)}</td>
           <td class="num ${cplCls(ad.cpl)}" style="font-size:10px;padding:5px 8px">${fR(ad.cpl)}</td>
-          ${temAC?(()=>{const lr=acLeadsAd(campName,ad.n);const cr=_cplReal(ad.spend||0,lr);return `<td class="num" style="font-size:10px;padding:5px 8px;color:var(--accent,#B8860B);font-weight:700">${fN(lr)}</td><td class="num ${cplCls(cr)}" style="font-size:10px;padding:5px 8px">${fR(cr)}</td>`;})():''}
+          ${temAC?(()=>{const lr=acLeadsAd(campName,ad.n,adsetName);const cr=_cplReal(ad.spend||0,lr);return `<td class="num" style="font-size:10px;padding:5px 8px;color:var(--accent,#B8860B);font-weight:700">${fN(lr)}</td><td class="num ${cplCls(cr)}" style="font-size:10px;padding:5px 8px">${fR(cr)}</td>`;})():''}
         </tr>`).join('')+
         '</tbody></table></div>';
     } else {
@@ -1786,7 +1780,7 @@ function toggleAdsetRow(campId,adsetName,campName,rowEl){
                 <div><div style="font-size:7px;color:var(--muted2);text-transform:uppercase">${t('ad_cpl')}</div><div class="${cplCls(ad.cpl)}" style="font-size:10px;font-weight:700;font-family:monospace">${fR(ad.cpl)}</div></div>
                 <div><div style="font-size:7px;color:var(--muted2);text-transform:uppercase">${t('ad_ctr')}</div><div style="font-size:10px;font-weight:700;font-family:monospace">${fP(ad.ctr)}</div></div>
                 <div><div style="font-size:7px;color:var(--muted2);text-transform:uppercase">${t('ad_invest')}</div><div style="font-size:10px;font-weight:700;font-family:monospace">${fR(ad.spend)}</div></div>
-                ${temAC?(()=>{const lr=acLeadsAd(campName,ad.n);const cr=_cplReal(ad.spend||0,lr);return `<div style="grid-column:1/2;border-top:1px dashed var(--border);padding-top:2px;margin-top:1px"><div style="font-size:7px;color:var(--accent,#B8860B);text-transform:uppercase;font-weight:700">${t('crm_col_real')}</div><div style="font-size:10px;font-weight:700;font-family:monospace;color:var(--accent,#B8860B)">${fN(lr)}</div></div><div style="grid-column:2/3;border-top:1px dashed var(--border);padding-top:2px;margin-top:1px"><div style="font-size:7px;color:var(--accent,#B8860B);text-transform:uppercase;font-weight:700">${t('crm_col_cplreal')}</div><div class="${cplCls(cr)}" style="font-size:10px;font-weight:700;font-family:monospace">${fR(cr)}</div></div>`;})():''}
+                ${temAC?(()=>{const lr=acLeadsAd(campName,ad.n,adsetName);const cr=_cplReal(ad.spend||0,lr);return `<div style="grid-column:1/2;border-top:1px dashed var(--border);padding-top:2px;margin-top:1px"><div style="font-size:7px;color:var(--accent,#B8860B);text-transform:uppercase;font-weight:700">${t('crm_col_real')}</div><div style="font-size:10px;font-weight:700;font-family:monospace;color:var(--accent,#B8860B)">${fN(lr)}</div></div><div style="grid-column:2/3;border-top:1px dashed var(--border);padding-top:2px;margin-top:1px"><div style="font-size:7px;color:var(--accent,#B8860B);text-transform:uppercase;font-weight:700">${t('crm_col_cplreal')}</div><div class="${cplCls(cr)}" style="font-size:10px;font-weight:700;font-family:monospace">${fR(cr)}</div></div>`;})():''}
               </div>
             </div>
           </div>`;
@@ -1811,7 +1805,7 @@ function renderAds(ads){
         <div class="ad-stats">
           <div><div class="as-l">${t('ad_ctr')}</div><div class="as-v">${fP(ad.ctr)}</div></div>
           <div><div class="as-l">${t('ad_invest')}</div><div class="as-v">${fR(ad.spend)}</div></div>
-          ${_adTemAC?(()=>{const lr=acLeadsAd(ad.camp||'',ad.n);const cr=_cplReal(ad.spend||0,lr);return `<div><div class="as-l" style="color:var(--accent,#B8860B)">${t('crm_col_real')}</div><div class="as-v" style="color:var(--accent,#B8860B)">${fN(lr)}</div></div><div><div class="as-l" style="color:var(--accent,#B8860B)">${t('crm_kpi_cpl')}</div><div class="as-v ${cplCls(cr)}">${fR(cr)}</div></div>`;})():`<div><div class="as-l">${t('ad_leads')}</div><div class="as-v">${fN(ad.ld)}</div></div><div><div class="as-l">${t('ad_cpl')}</div><div class="as-v ${cplCls(ad.cpl)}">${fR(ad.cpl)}</div></div>`}
+          ${_adTemAC?(()=>{const lr=acLeadsAd(ad.camp||'',ad.n,ad.adset);const cr=_cplReal(ad.spend||0,lr);return `<div><div class="as-l" style="color:var(--accent,#B8860B)">${t('crm_col_real')}</div><div class="as-v" style="color:var(--accent,#B8860B)">${fN(lr)}</div></div><div><div class="as-l" style="color:var(--accent,#B8860B)">${t('crm_kpi_cpl')}</div><div class="as-v ${cplCls(cr)}">${fR(cr)}</div></div>`;})():`<div><div class="as-l">${t('ad_leads')}</div><div class="as-v">${fN(ad.ld)}</div></div><div><div class="as-l">${t('ad_cpl')}</div><div class="as-v ${cplCls(ad.cpl)}">${fR(ad.cpl)}</div></div>`}
         </div>
       </div></div>`;
   }).join('');
