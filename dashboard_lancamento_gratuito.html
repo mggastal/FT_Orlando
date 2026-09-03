@@ -335,8 +335,9 @@ details.desk-only{display:block!important;}
 .crm-utm-q{font-weight:700;min-width:26px;text-align:right;}
 .crm-utm-cpl{min-width:64px;text-align:right;color:var(--muted);font-size:10px;}
 
-.lpcmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media(max-width:900px){.lpcmp-grid{grid-template-columns:1fr;}}
+.lpcmp-grid{display:grid;gap:16px;grid-template-columns:1fr 1fr;}
+@media(max-width:1200px){.lpcmp-grid{grid-template-columns:1fr 1fr !important;}}
+@media(max-width:760px){.lpcmp-grid{grid-template-columns:1fr !important;}}
 .lpcmp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);}
 .lpcmp-hd{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;border-bottom:2px solid var(--accent,#B8860B);padding-bottom:10px;}
 .lpcmp-hd h3{font-size:16px;font-weight:600;margin:0;letter-spacing:.2px;}
@@ -2535,7 +2536,8 @@ function renderLp(){
     </div>`;
   }
 
-  wrap.innerHTML='<div class="lpcmp-grid">'+ordem.map(k=>card(LPS[k])).join('')+'</div>';
+  const nCols=Math.min(ordem.length,4);
+  wrap.innerHTML='<div class="lpcmp-grid" style="grid-template-columns:repeat('+nCols+',1fr)">'+ordem.map(k=>card(LPS[k])).join('')+'</div>';
 }
 
 // ═══ VENDAS ═══
