@@ -79,8 +79,8 @@ CHECKOUT_BOM     = 8.0    # Taxa de Checkout (checkout/LPView) ≥ → verde
 CHECKOUT_MEDIO   = 4.0
 TXLP_BOM         = 3.0    # Taxa de Conversão LP (compra/LPView) ≥ → verde
 TXLP_MEDIO       = 1.5
-CPM_BOM          = 15.0    
-CPM_MEDIO        = 20.0
+CPM_BOM          = 20.0    
+CPM_MEDIO        = 23.0
 
 # ══════════════════════════════════════════════════════
 # Mapeamento de moeda → símbolo e label
