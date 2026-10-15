@@ -314,7 +314,7 @@ function pageGeral(){
       <div>CPM</div><div>${E(div(o.spend,o.impr)*1000)}</div>
       <div>CTR</div><div>${P(div(o.clicks,o.impr),2)}</div>
       <div>${x.visits}</div><div class="hl">${N(o.visits)}</div>
-      <div>${x.cpv}</div><div class="hl">${c==='visita'?`<span class="pill">${x.cheaper(N(cpvI/cpvV,1))}</span> `:''}${E(div(o.spend,o.visits))}</div>
+      <div>${x.cpv}</div><div class="hl">${E(div(o.spend,o.visits))}</div>
       <div>${x.follows}</div><div class="hl">${N(o.follows)}</div>
       <div>${x.cpf}</div><div class="hl">${E(div(o.spend,o.follows))}</div>
       <div>${x.v75}</div><div>${N(o.p75)}</div>
