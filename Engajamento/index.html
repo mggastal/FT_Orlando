@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
-:root{--bg:#f0f2f7;--surface:#fff;--surface2:#f7f8fc;--border:rgba(0,0,0,.07);--text:#0f1523;--muted:#6b7280;--muted2:#9ca3af;--accent:#e11d48;--sh:0 1px 4px rgba(0,0,0,.06);--r:12px;
+:root{--bg:#f0f2f7;--surface:#fff;--surface2:#f7f8fc;--border:rgba(0,0,0,.07);--text:#0f1523;--muted:#6b7280;--muted2:#9ca3af;--accent:#e11d48;--sh:0 1px 4px rgba(0,0,0,.06);--r:12px;--brand:#7c3aed;
   --vis:#7c3aed;--int:#0ea5e9;--a1:#e11d48;--a2:#f59e0b;--a3:#059669;--a4:#94a3b8;--good:#059669;--warn:#d97706;--bad:#dc2626;}
 [data-theme="dark"]{--bg:#0a0f1e;--surface:#111827;--surface2:#1a2236;--border:rgba(255,255,255,.08);--text:#f0f4ff;--muted:#8b95a9;--muted2:#5a6478;--sh:0 1px 4px rgba(0,0,0,.3);
   --vis:#a78bfa;--int:#38bdf8;--a1:#fb7185;--a2:#fbbf24;--a3:#34d399;--a4:#94a3b8;--good:#34d399;--warn:#fbbf24;--bad:#f87171;}
@@ -275,7 +275,7 @@ const tot={visita:agg(D.visita),inter:agg(D.inter)};
 const all=agg([...D.visita,...D.inter]);
 
 /* ---------- páginas ---------- */
-function kpi(lbl,val,sub,c){return `<div class="kpi" style="--kc:${c?css(c):'#e2e8f0'};--kv:${c?css(c):'var(--text)'}"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><div class="kpi-sub">${sub||''}</div></div>`;}
+function kpi(lbl,val,sub,c){return `<div class="kpi" style="--kc:var(--brand);--kv:var(--text)"><div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div><div class="kpi-sub">${sub||''}</div></div>`;}
 
 /* 9 métricas principais: [rótulo, valor formatado a partir do agregado, cor] */
 function metrics(){
