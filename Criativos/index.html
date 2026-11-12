@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Criativos · Captação</title>
+<link rel="icon" href="media/fortraffic_roxo.png">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f0f2f7;--surface:#fff;--surface2:#f7f8fc;--border:rgba(0,0,0,.08);--text:#0f1523;--muted:#6b7280;--muted2:#9ca3af;--brand:#7c3aed;--brand-soft:rgba(124,58,237,.10);--vid:#7c3aed;--img:#0ea5e9;--good:#059669;--warn:#d97706;--bad:#dc2626;--sh:0 1px 4px rgba(0,0,0,.06);--r:14px}
+[data-theme=dark]{--bg:#0a0f1e;--surface:#111827;--surface2:#1a2236;--border:rgba(255,255,255,.09);--text:#f0f4ff;--muted:#8b95a9;--muted2:#5a6478;--brand-soft:rgba(124,58,237,.22);--sh:0 1px 4px rgba(0,0,0,.3)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px 60px}
+header{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--border)}
+.hd{max-width:1240px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hd img{height:26px}.logo-w{display:none}[data-theme=dark] .logo-w{display:block}[data-theme=dark] .logo-p{display:none}
+.hd h1{font-size:17px;font-weight:700;margin:0}.hd .sub{color:var(--muted);font-size:13px}
+.hd .sp{flex:1}
+nav.tabs{display:flex;gap:4px}
+nav.tabs a{color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;padding:6px 10px;border-radius:8px}
+nav.tabs a:hover{background:var(--surface2);color:var(--text)}
+.seg{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:2px}
+.seg button{border:0;background:none;color:var(--muted);font:600 12px 'DM Sans';padding:5px 10px;border-radius:7px;cursor:pointer}
+.seg button.active{background:var(--brand);color:#fff}
+.tbtn{border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:9px;padding:5px 9px;cursor:pointer}
+h2{font-size:20px;margin:34px 0 4px}.lead{color:var(--muted);margin:0 0 16px;font-size:14px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kpi{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border);padding:14px 16px;border-top:3px solid var(--brand)}
+.kpi .l{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.kpi .v{font-size:24px;font-weight:700;margin:4px 0 6px}
+.kpi .s{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:1px}
+.kpi .s b{font-weight:600;color:var(--text)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+.card{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);border:1px solid var(--border)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:9px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--border)}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--muted);font-weight:600;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--surface)}
+th:hover{color:var(--text)}th.sorted::after{content:attr(data-arrow);margin-left:4px;color:var(--brand)}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--surface2)}
+td.n{font-family:'DM Mono',monospace;font-size:13px}
+.best{color:var(--good);font-weight:600}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
+.t-vid{background:rgba(124,58,237,.12);color:var(--vid)}.t-img{background:rgba(14,165,233,.13);color:var(--img)}
+.t-on{background:rgba(5,150,105,.13);color:var(--good)}.t-off{background:var(--surface2);color:var(--muted)}
+.t-low{background:rgba(217,119,6,.13);color:var(--warn)}
+.bars{padding:16px 18px;display:flex;flex-direction:column;gap:7px}
+.bar{display:grid;grid-template-columns:300px 1fr;gap:12px;align-items:center;font-size:13px}
+.bar .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .tr{position:relative;height:24px;background:var(--surface2);border-radius:6px}
+.bar .fl{height:100%;border-radius:6px}
+.bar .lb{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:600;white-space:nowrap}
+.bar .lb.out{color:var(--text)}.bar .lb.in{color:#fff}
+.creative{display:grid;grid-template-columns:400px 1fr;gap:24px;padding:20px;margin-bottom:18px;scroll-margin-top:80px}
+.media{background:#000;border-radius:12px;overflow:hidden;aspect-ratio:9/16;width:400px;max-width:100%}
+.media video,.media img{width:100%;height:100%;object-fit:contain;display:block}
+.media img{cursor:zoom-in}
+.info h3{margin:0 0 2px;font-size:18px;word-break:break-word}
+.info .meta{color:var(--muted);font-size:13px;margin-bottom:14px}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.m{background:var(--surface2);border-radius:10px;padding:10px 12px}
+.m .l{font-size:11.5px;color:var(--muted);font-weight:600}
+.m .v{font-size:19px;font-weight:700}
+.m.hl{background:var(--brand-soft)}.m.hl .v{color:var(--brand)}
+.ret{margin-bottom:16px}
+.ret .t{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em}
+.ret .row{display:grid;grid-template-columns:72px 1fr 120px;gap:10px;align-items:center;font-size:13px;margin-bottom:5px}
+.ret .tr{height:16px;background:var(--surface2);border-radius:5px;overflow:hidden}
+.ret .fl{height:100%;background:var(--vid);border-radius:5px}
+.ret .val{font-family:'DM Mono',monospace;font-size:12.5px;text-align:right}
+details.tx{border:1px solid var(--border);border-radius:10px;background:var(--surface2)}
+details.tx summary{cursor:pointer;padding:10px 14px;font-weight:600;font-size:14px;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.tx summary::after{content:'+';font-size:18px;color:var(--muted)}details.tx[open] summary::after{content:'−'}
+.txb{padding:0 14px 14px}
+.txb .sw{display:flex;gap:6px;margin-bottom:10px}
+.txb .sw button{border:1px solid var(--border);background:var(--surface);color:var(--muted);font:600 12px 'DM Sans';padding:4px 10px;border-radius:7px;cursor:pointer}
+.txb .sw button.active{border-color:var(--brand);color:var(--brand)}
+.txb p{margin:0 0 8px;font-size:15px;line-height:1.6}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:50;cursor:zoom-out}
+.lightbox.open{display:flex}.lightbox img{max-height:94vh;max-width:94vw;border-radius:8px}
+footer{color:var(--muted2);font-size:12px;text-align:center;margin-top:40px}
+@media(max-width:980px){.kpis{grid-template-columns:repeat(3,1fr)}.creative{grid-template-columns:1fr}.media{margin:0 auto}.bar{grid-template-columns:170px 1fr}}
+@media(max-width:560px){.kpis{grid-template-columns:repeat(2,1fr)}.mgrid{grid-template-columns:repeat(2,1fr)}nav.tabs{display:none}.bar{grid-template-columns:1fr}.creative{padding:14px}}
+</style>
+</head>
+<body>
+<header><div class="hd">
+  <img class="logo-p" src="media/fortraffic_roxo.png" alt="Fortraffic"><img class="logo-w" src="media/fortraffic_branco.png" alt="Fortraffic">
+  <div><h1 data-t="title"></h1><div class="sub" id="period"></div></div>
+  <div class="sp"></div>
+  <nav class="tabs"><a href="#resumo" data-t="nav1"></a><a href="#ranking" data-t="nav2"></a><a href="#videos" data-t="nav3"></a><a href="#imagens" data-t="nav4"></a></nav>
+  <div class="seg" id="langSeg"><button data-l="pt">PT</button><button data-l="es">ES</button></div>
+  <button class="tbtn" id="themeBtn" onclick="toggleTheme()">◐</button>
+</div></header>
+<div class="wrap">
+  <section id="resumo"><h2 data-t="h_res"></h2><p class="lead" id="campLine"></p><div class="kpis" id="kpis"></div></section>
+  <section id="ranking"><h2 data-t="h_rank"></h2><p class="lead" data-t="rank_lead"></p>
+    <div class="card tbl-wrap"><table id="tbl"><thead></thead><tbody></tbody></table></div>
+    <h2 style="font-size:16px;margin-top:24px" data-t="h_leads"></h2>
+    <div class="card bars" id="bars"></div></section>
+  <section id="videos"><h2 data-t="h_vid"></h2><p class="lead" data-t="vid_lead"></p><div id="vidList"></div></section>
+  <section id="imagens"><h2 data-t="h_img"></h2><p class="lead" data-t="img_lead"></p><div id="imgList"></div></section>
+  <footer>Fortraffic · <span data-t="foot"></span></footer>
+</div>
+<div class="lightbox" id="lb" onclick="this.classList.remove('open')"><img id="lbImg" alt=""></div>
+<script>
+const D={"items": [{"name": "VID_MIRA_INTERIORISTA", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 229.72, "impr": 19790.0, "clicks": 268.0, "link": 185.0, "lpv": 140.0, "leads": 62.0, "p25": 1575.0, "p50": 1052.0, "p75": 868.0, "p100": 460.0, "thru": 1241.0, "es": ["Mira interiorista, el problema no es que cobres poco, el problema es que el sistema que usas para calcular tus honorarios te obliga a perder dinero antes de empezar el proyecto.", "Hay tres formas de tarifar proyectos que quizás son las más usadas en el sector.", "El porcentaje de obra, el precio por metro cuadrado y el precio que imaginas que puede pagar el cliente.", "Y las tres tienen algo en común, ninguna parte de lo que a ti te cuesta realmente hacer ese proyecto y del valor que aportas con tu diseño.", "La consecuencia es una facturación que parece razonable hasta que cuentas las horas que le metiste realmente al proyecto.", "En cuatro clases gratis te enseño por qué fallan esos tres sistemas y cómo construir una propuesta que el cliente no regatea.", "Haz clic abajo y empezamos."], "pt": ["Olha, designer de interiores, o problema não é que você cobra pouco, o problema é que o sistema que você usa para calcular seus honorários te obriga a perder dinheiro antes de começar o projeto.", "Há três formas de precificar projetos que talvez sejam as mais usadas no setor.", "A porcentagem da obra, o preço por metro quadrado e o preço que você imagina que o cliente pode pagar.", "E as três têm algo em comum: nenhuma parte do quanto realmente te custa fazer esse projeto e do valor que você entrega com o seu design.", "A consequência é um faturamento que parece razoável até você contar as horas que realmente colocou no projeto.", "Em quatro aulas grátis eu te ensino por que esses três sistemas falham e como construir uma proposta que o cliente não pechincha.", "Clique abaixo e começamos."], "dur": 40, "same_art": false}, {"name": "VID_SI_TRABAJAS_MUCHO_Y_GANAS_POCO", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 2.26, "impr": 186.0, "clicks": 2.0, "link": 1.0, "lpv": 1.0, "leads": 0.0, "p25": 24.0, "p50": 7.0, "p75": 5.0, "p100": 5.0, "thru": 7.0, "es": ["Si trabajas mucho, ganas poco y cada vez te apetece menos seguir así, el problema no es que te falte talento, te falta un sistema.", "El talento y la experiencia no fijan tu precio.", "El sistema con el que calculas tus honorarios y los defiendes, sí fijan tu precio.", "Y si ese sistema está mal construido, da igual lo buena o bueno que seas.", "El número que sale siempre se queda corto porque los clientes nunca entienden el verdadero valor de lo que aportas.", "En cuatro clases gratis te enseño a cambiar el sistema, no las horas que trabajas.", "Haz clic abajo."], "pt": ["Se você trabalha muito, ganha pouco e cada vez tem menos vontade de continuar assim, o problema não é falta de talento, é falta de um sistema.", "O talento e a experiência não definem o seu preço.", "O sistema com que você calcula seus honorários e os defende, esse sim define o seu preço.", "E se esse sistema está mal construído, não importa o quão boa ou bom você seja.", "O número que sai sempre fica curto, porque os clientes nunca entendem o verdadeiro valor do que você entrega.", "Em quatro aulas grátis eu te ensino a mudar o sistema, não as horas que você trabalha.", "Clique abaixo."], "dur": 30, "same_art": false}, {"name": "VID_HAY_INTERIORISTAS_CON_UN_TALENTO", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 7.64, "impr": 600.0, "clicks": 4.0, "link": 1.0, "lpv": 1.0, "leads": 0.0, "p25": 56.0, "p50": 27.0, "p75": 15.0, "p100": 8.0, "thru": 29.0, "es": ["Hay interioristas con un talento extraordinario que cobran menos que alguien recién llegado al sector.", "Y no es casualidad.", "El talento y la experiencia no fijan el precio.", "El sistema con el que presupuestas sí fija el precio.", "Y si ese sistema está mal construido, da igual lo bueno o lo bueno que seas.", "El número que sale siempre va a quedar por debajo de lo que merece tu trabajo.", "Lo más frustrante de esa situación es que el cliente que llega tampoco lo reconoce.", "Porque el precio bajo no atrae al cliente que valora lo que haces.", "Atrae exactamente al contrario.", "En 4 clases gratis vas a entender por qué ocurre eso y cómo se rompe ese círculo.", "Desde el cálculo de honorarios hasta la propuesta que presentas a los clientes.", "Haz clic abajo y entra ya a verlo."], "pt": ["Há designers de interiores com um talento extraordinário que cobram menos do que alguém recém-chegado ao setor.", "E não é por acaso.", "O talento e a experiência não definem o preço.", "O sistema com que você orça, sim, define o preço.", "E se esse sistema está mal construído, não importa o quão bom ou boa você seja.", "O número que sai sempre vai ficar abaixo do que o seu trabalho merece.", "O mais frustrante dessa situação é que o cliente que chega também não reconhece isso.", "Porque o preço baixo não atrai o cliente que valoriza o que você faz.", "Atrai exatamente o contrário.", "Em 4 aulas grátis você vai entender por que isso acontece e como quebrar esse ciclo.", "Do cálculo de honorários até a proposta que você apresenta aos clientes.", "Clique abaixo e entre já para ver."], "dur": 37, "same_art": false}, {"name": "VID_EN_INTERIORISMO_SI_CADA_VEZ", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 3.05, "impr": 206.0, "clicks": 0.0, "link": 0.0, "lpv": 0.0, "leads": 0.0, "p25": 27.0, "p50": 10.0, "p75": 9.0, "p100": 5.0, "thru": 14.0, "es": ["En interiorismo, si cada vez que presentas tu precio el cliente empieza a negociar, el problema no es el cliente ni tu precio.", "El cliente regatea cuando no entiende que está comprando.", "Y no lo entiende porque tu propuesta no se lo ha explicado antes de llegar al número final.", "Lo que ocurre entonces es predecible.", "Bajas el precio, aceptas condiciones que no querías aceptar o pierdes el proyecto.", "Y en los tres casos sales peor de lo que entrabas.", "Esto tiene una solución y no pasa por tener más confianza en ti ni por ser mejor vendedor.", "En cuatro clases gratis te enseño a construir la propuesta que hará que tus clientes dejen de regatear.", "Haz clic abajo y entra ya a ver las clases."], "pt": ["No design de interiores, se toda vez que você apresenta seu preço o cliente começa a negociar, o problema não é o cliente nem o seu preço.", "O cliente pechincha quando não entende o que está comprando.", "E não entende porque a sua proposta não explicou isso antes de chegar ao número final.", "O que acontece então é previsível.", "Você baixa o preço, aceita condições que não queria aceitar ou perde o projeto.", "E nos três casos você sai pior do que entrou.", "Isso tem solução, e não passa por ter mais confiança em você nem por ser um vendedor melhor.", "Em quatro aulas grátis eu te ensino a construir a proposta que vai fazer seus clientes pararem de pechinchar.", "Clique abaixo e entre já para ver as aulas."], "dur": 34, "same_art": false}, {"name": "VID_LLEVAS_SEMANAS_TRABAJANDO", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 4.47, "impr": 299.0, "clicks": 2.0, "link": 1.0, "lpv": 0.0, "leads": 0.0, "p25": 20.0, "p50": 10.0, "p75": 7.0, "p100": 4.0, "thru": 12.0, "es": ["Llevas semanas trabajando y a fin de mes el dinero no aparece como debería.", "Esto no es mala suerte, es que nunca has hecho una cuenta muy concreta.", "Mira, 12.000 euros de honorarios, por ejemplo, suenan a proyecto serio, hasta que en realidad", "los divides entre las horas reales que le metiste al proyecto.", "Con esas reuniones extra, deshora, cambios de última hora, visitas, whatsapps, etc.", "Ahí es exactamente donde se pierde el dinero, sin que lo veas venir.", "En la primera de cuatro clases que quiero regalarte vas a hacer esa cuenta con tu propio", "último proyecto y después vas a ver otras muchas cosas para mejorar tu situación.", "Haz clic abajo si quieres verlas."], "pt": ["Você passa semanas trabalhando e no fim do mês o dinheiro não aparece como deveria.", "Isso não é azar, é que você nunca fez uma conta bem concreta.", "Olha, 12.000 euros de honorários, por exemplo, soam como projeto sério, até que na verdade", "você divide pelas horas reais que colocou no projeto.", "Com aquelas reuniões extras, fora de hora, mudanças de última hora, visitas, WhatsApps etc.", "É exatamente aí que o dinheiro se perde, sem você ver chegando.", "Na primeira de quatro aulas que quero te dar de presente você vai fazer essa conta com o seu próprio", "último projeto e depois vai ver muitas outras coisas para melhorar a sua situação.", "Clique abaixo se quiser vê-las."], "dur": 33, "same_art": false}, {"name": "VID_SI_ERES_INTERIORISTA_Y_ACABAS", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 6.76, "impr": 473.0, "clicks": 6.0, "link": 5.0, "lpv": 2.0, "leads": 2.0, "p25": 26.0, "p50": 13.0, "p75": 6.0, "p100": 5.0, "thru": 19.0, "es": ["Si eres interiorista y acabas el mes agotado y los números siguen sin cuadrar, hay un cálculo que probablemente nunca hayas hecho.", "¿Cuánto te pagaron por cada hora de tu vida que metiste en ese proyecto?", "Con todo incluido.", "Las reuniones extra, los audios de WhatsApp a deshora, los cambios de criterio del cliente, los desplazamientos, todo.", "Cuando los interioristas hacen ese cálculo por primera vez, casi todos descubren lo mismo.", "Están cobrando menos que un fontanero por hora.", "Y no porque trabajen mal, sino porque nadie les enseñó a medir lo que cuesta de verdad un proyecto.", "Hay cuatro clases donde hacemos esa cuenta juntos, con tus propios números.", "Y lo que descubras va a cambiar la forma en que presupuestas para siempre.", "Haz clic abajo.", "En la primera de las cuatro clases gratis vas a descubrir cuánto te pagan realmente por hora.", "Y por qué ese número duele más de lo que crees."], "pt": ["Se você é designer de interiores e termina o mês esgotado e os números continuam sem fechar, há um cálculo que provavelmente você nunca fez.", "Quanto te pagaram por cada hora da sua vida que você colocou nesse projeto?", "Com tudo incluído.", "As reuniões extras, os áudios de WhatsApp fora de hora, as mudanças de critério do cliente, os deslocamentos, tudo.", "Quando os designers fazem esse cálculo pela primeira vez, quase todos descobrem a mesma coisa.", "Estão cobrando menos que um encanador por hora.", "E não porque trabalham mal, mas porque ninguém os ensinou a medir quanto realmente custa um projeto.", "Há quatro aulas onde fazemos essa conta juntos, com os seus próprios números.", "E o que você descobrir vai mudar para sempre a forma como você orça.", "Clique abaixo.", "Na primeira das quatro aulas grátis você vai descobrir quanto realmente te pagam por hora.", "E por que esse número dói mais do que você imagina."], "dur": 46, "same_art": false}, {"name": "VID_LLEVAS_SEMANAS", "kind": "video", "status": "CAMPAIGN_PAUSED", "spend": 4.55, "impr": 381.0, "clicks": 4.0, "link": 2.0, "lpv": 1.0, "leads": 0.0, "p25": 18.0, "p50": 9.0, "p75": 6.0, "p100": 4.0, "thru": 10.0, "es": ["Llevas semanas trabajando y a fin de mes el dinero no aparece como debería.", "Esto no es mala suerte interiorista, es un problema de estructura.", "El problema no está en cuánto trabajas, está en cómo está construido tu negocio por dentro.", "Los proyectos entran, el tiempo sale y en algún punto entre los dos ese esfuerzo se pierde sin que sepas exactamente dónde.", "La mayoría de interioristas lo normaliza.", "Piensa en que es así, que es normal, que el sector es difícil, que ya mejorará.", "Y así pasan los meses y luego pasan los años.", "He grabado cuatro clases donde vas a ver exactamente dónde se está yendo ese dinero, con tus propios números y cuál es la fórmula para empezar a tener un estudio rentable de una vez por todas.", "Dale click y mira las cuatro clases ahora."], "pt": ["Você passa semanas trabalhando e no fim do mês o dinheiro não aparece como deveria.", "Isso não é azar, designer, é um problema de estrutura.", "O problema não está em quanto você trabalha, está em como o seu negócio está construído por dentro.", "Os projetos entram, o tempo sai e em algum ponto entre os dois esse esforço se perde sem que você saiba exatamente onde.", "A maioria dos designers de interiores normaliza isso.", "Pensa que é assim, que é normal, que o setor é difícil, que vai melhorar.", "E assim passam os meses e depois passam os anos.", "Gravei quatro aulas onde você vai ver exatamente para onde esse dinheiro está indo, com os seus próprios números, e qual é a fórmula para começar a ter um estúdio rentável de uma vez por todas.", "Clique e assista às quatro aulas agora."], "dur": 39, "same_art": false}, {"name": "VID_TU_NEGOCIO_FUNCIONA", "kind": "video", "status": "PAUSED", "spend": 41.36, "impr": 3002.0, "clicks": 32.0, "link": 26.0, "lpv": 16.0, "leads": 3.0, "p25": 232.0, "p50": 138.0, "p75": 97.0, "p100": 58.0, "thru": 168.0, "es": ["Tu negocio funciona cuando alguien te recomienda y cuando nadie te recomienda tu negocio deja de funcionar.", "Eso no es un negocio, es una dependencia.", "Y el problema con las dependencias es que no avisan cuando van a fallar.", "Un mes te entra un proyecto grande y respiras.", "El siguiente mes no entra nada y la ansiedad vuelve.", "Y entre medias estás tan ocupado ejecutando lo que tienes que no queda tiempo para construir algo que funcione sin que todo dependa de ti.", "Porque el boca a boca no escala.", "Y mientras no tengas un sistema que traiga clientes sin que tú estés pendiente, ese ciclo no se rompe.", "En 4 clases gratuitas vas a entender por qué tu negocio está estructurado para mantenerte atrapada y cómo se puede cambiar.", "Haz clic abajo y accede ya mismo."], "pt": ["O seu negócio funciona quando alguém te indica, e quando ninguém te indica o seu negócio para de funcionar.", "Isso não é um negócio, é uma dependência.", "E o problema das dependências é que elas não avisam quando vão falhar.", "Num mês entra um projeto grande e você respira.", "No mês seguinte não entra nada e a ansiedade volta.", "E no meio disso você está tão ocupada executando o que tem que não sobra tempo para construir algo que funcione sem que tudo dependa de você.", "Porque o boca a boca não escala.", "E enquanto você não tiver um sistema que traga clientes sem você ficar em cima, esse ciclo não se quebra.", "Em 4 aulas gratuitas você vai entender por que o seu negócio está estruturado para te manter presa e como isso pode mudar.", "Clique abaixo e acesse agora mesmo."], "dur": 37, "same_art": false}, {"name": "IMG_EL_PROBLEMA_ORDENADOR", "kind": "image", "status": "CAMPAIGN_PAUSED", "spend": 40.75, "impr": 2744.0, "clicks": 34.0, "link": 29.0, "lpv": 19.0, "leads": 4.0, "p25": 0.0, "p50": 0.0, "p75": 0.0, "p100": 0.0, "thru": 0.0, "same_art": false}, {"name": "IMG_TRABAJAS_PANTALLAS", "kind": "image", "status": "CAMPAIGN_PAUSED", "spend": 53.7, "impr": 3247.0, "clicks": 36.0, "link": 24.0, "lpv": 19.0, "leads": 1.0, "p25": 0.0, "p50": 0.0, "p75": 0.0, "p100": 0.0, "thru": 0.0, "same_art": true}, {"name": "IMG_EL_PROBLEMA_CHICO_ORDENADOR", "kind": "image", "status": "CAMPAIGN_PAUSED", "spend": 12.16, "impr": 835.0, "clicks": 5.0, "link": 4.0, "lpv": 1.0, "leads": 0.0, "p25": 0.0, "p50": 0.0, "p75": 0.0, "p100": 0.0, "thru": 0.0, "same_art": false}, {"name": "IMG_DOCE_MIL_CENTRADO", "kind": "image", "status": "CAMPAIGN_PAUSED", "spend": 65.99, "impr": 4373.0, "clicks": 45.0, "link": 32.0, "lpv": 15.0, "leads": 10.0, "p25": 0.0, "p50": 0.0, "p75": 0.0, "p100": 0.0, "thru": 0.0, "same_art": false}, {"name": "IMG_EL_PROBLEMA_IZQ", "kind": "image", "status": "PAUSED", "spend": 35.75, "impr": 2909.0, "clicks": 28.0, "link": 19.0, "lpv": 11.0, "leads": 4.0, "p25": 0.0, "p50": 0.0, "p75": 0.0, "p100": 0.0, "thru": 0.0, "same_art": false}, {"name": "IMG_EL_PROBLEMA_PANTALLAS", "kind": "image", "status": "PAUSED", "spend": 105.8, "impr": 7170.0, "clicks": 84.0, "link": 51.0, "lpv": 37.0, "leads": 11.0, "p25": 0.0, "p50": 0.0, "p75": 0.0, "p100": 0.0, "thru": 0.0, "same_art": true}], "d0": "07/08/2026", "d1": "08/09/2026", "campaigns": ["1FASE 🔵  [ABO] - [HUB_4C] [LEADS] - GR [AB]"], "adsets": ["IMG-INT_ARQUITECTURA_TECNOLOGIA_4,5M (35-55) (H/M) [AB]", "VID-INT_ARQUITECTURA_TECNOLOGIA_4,5M (35-55) (H/M) [AB]"]};
+const T={
+ pt:{title:'Criativos · Captação',nav1:'Resumo',nav2:'Ranking',nav3:'Vídeos',nav4:'Imagens',h_res:'Resumo',h_rank:'Ranking de criativos',
+  rank_lead:'Clique no cabeçalho para ordenar. Clique na linha para ir ao criativo.',h_leads:'Leads por criativo',
+  h_vid:'Vídeos',vid_lead:'Dê play para assistir. A transcrição abre em cada card.',h_img:'Imagens',img_lead:'Clique na imagem para ampliar.',
+  spend:'Investimento',impr:'Impressões',ctr:'CTR (link)',lpv:'Visitas à LP',leads:'Leads',cpl:'Custo por lead',cpm:'CPM',conv:'Conv. LP → lead',
+  hook:'Hook (25%)',v75:'Viu 75%',thru:'ThruPlay',link:'Cliques no link',total:'Total',vids:'Vídeos',imgs:'Imagens',vid1:'Vídeo',img1:'Imagem',
+  creative:'Criativo',type:'Tipo',status:'Status',on:'Ativo',off:'Pausado',low:'pouca entrega',
+  ret:'Retenção (% das impressões)',tx:'Transcrição',orig:'Original (ES)',tr:'Tradução (PT)',
+  same:'Mesma arte do anúncio {x}: anúncios diferentes no Meta usando a mesma imagem.',dur:'duração',
+  campLine:'Campanha {c} · conjuntos de vídeo e de imagem',per:'Período',foot:'dados da aba meta-ads (Meta Ads), atualizada pelo cliente',
+  lowNote:'"Pouca entrega" = menos de 1.000 impressões; os números ainda não dizem muito.',noLead:'sem leads'},
+ es:{title:'Creativos · Captación',nav1:'Resumen',nav2:'Ranking',nav3:'Vídeos',nav4:'Imágenes',h_res:'Resumen',h_rank:'Ranking de creativos',
+  rank_lead:'Haz clic en la cabecera para ordenar. Haz clic en la fila para ir al creativo.',h_leads:'Leads por creativo',
+  h_vid:'Vídeos',vid_lead:'Dale play para verlo. La transcripción se abre en cada tarjeta.',h_img:'Imágenes',img_lead:'Haz clic en la imagen para ampliarla.',
+  spend:'Inversión',impr:'Impresiones',ctr:'CTR (enlace)',lpv:'Visitas a la LP',leads:'Leads',cpl:'Coste por lead',cpm:'CPM',conv:'Conv. LP → lead',
+  hook:'Hook (25%)',v75:'Vio 75%',thru:'ThruPlay',link:'Clics en el enlace',total:'Total',vids:'Vídeos',imgs:'Imágenes',vid1:'Vídeo',img1:'Imagen',
+  creative:'Creativo',type:'Tipo',status:'Estado',on:'Activo',off:'Pausado',low:'poca entrega',
+  ret:'Retención (% de las impresiones)',tx:'Transcripción',orig:'Original (ES)',tr:'Traducción (PT)',
+  same:'Misma pieza que el anuncio {x}: anuncios distintos en Meta con la misma imagen.',dur:'duración',
+  campLine:'Campaña {c} · conjuntos de vídeo y de imagen',per:'Periodo',foot:'datos de la pestaña meta-ads (Meta Ads), actualizada por el cliente',
+  lowNote:'"Poca entrega" = menos de 1.000 impresiones; los números aún dicen poco.',noLead:'sin leads'}
+};
+let L='pt';try{L=new URLSearchParams(location.search).get('lang')||localStorage.getItem('orl-lang')||'pt'}catch(e){}
+try{const th=localStorage.getItem('orl-theme');if(th)document.documentElement.dataset.theme=th}catch(e){}
+const t=k=>T[L][k]||k;
+const loc=()=>L==='es'?'es-ES':'pt-BR';
+const eur=v=>v==null||!isFinite(v)?'–':v.toLocaleString(loc(),{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});
+const int=v=>Math.round(v||0).toLocaleString(loc());
+const pct=(v,d=1)=>v==null||!isFinite(v)?'–':(v*100).toLocaleString(loc(),{minimumFractionDigits:d,maximumFractionDigits:d})+'%';
+const div=(a,b)=>b?a/b:null;
+const nice=n=>n.replace(/^(VID|IMG)_/,'').replace(/_/g,' ');
+const active=s=>/^ACTIVE$/i.test(s||'');
+const items=D.items.map(x=>({...x,cpm:div(x.spend,x.impr)*1000,ctr:div(x.link,x.impr),cpl:div(x.spend,x.leads),conv:div(x.leads,x.lpv),hook:x.kind==='video'?div(x.p25,x.impr):null,v75r:x.kind==='video'?div(x.p75,x.impr):null,low:x.impr<1000}));
+const sum=(arr,k)=>arr.reduce((s,x)=>s+(x[k]||0),0);
+
+function kpis(){
+  const g={total:items,vids:items.filter(x=>x.kind==='video'),imgs:items.filter(x=>x.kind==='image')};
+  const m=a=>({spend:sum(a,'spend'),impr:sum(a,'impr'),link:sum(a,'link'),lpv:sum(a,'lpv'),leads:sum(a,'leads')});
+  const G={total:m(g.total),vids:m(g.vids),imgs:m(g.imgs)};
+  const defs=[['spend',x=>eur(x.spend)],['impr',x=>int(x.impr)],['ctr',x=>pct(div(x.link,x.impr),2)],['lpv',x=>int(x.lpv)],['leads',x=>int(x.leads)],['cpl',x=>eur(div(x.spend,x.leads))]];
+  document.getElementById('kpis').innerHTML=defs.map(([k,f])=>`<div class="kpi"><div class="l">${t(k)}</div><div class="v">${f(G.total)}</div>
+   <div class="s"><span><span class="dot" style="background:var(--vid)"></span>${t('vids')}: <b>${f(G.vids)}</b></span><span><span class="dot" style="background:var(--img)"></span>${t('imgs')}: <b>${f(G.imgs)}</b></span></div></div>`).join('');
+}
+
+const COLDEF=[['name','creative'],['kind','type'],['status','status'],['spend','spend'],['impr','impr'],['cpm','cpm'],['ctr','ctr'],['lpv','lpv'],['leads','leads'],['cpl','cpl'],['conv','conv'],['hook','hook'],['v75r','v75']];
+let sortK='leads',sortD=-1;
+function fmt(k,x){switch(k){
+ case 'name':return `${nice(x.name)}${x.low?`<span class="tag t-low">${t('low')}</span>`:''}`;
+ case 'kind':return `<span class="tag ${x.kind==='video'?'t-vid':'t-img'}" style="margin:0">${x.kind==='video'?t('vid1'):t('img1')}</span>`;
+ case 'status':return `<span class="tag ${active(x.status)?'t-on':'t-off'}" style="margin:0">${active(x.status)?t('on'):t('off')}</span>`;
+ case 'spend':case 'cpm':return eur(x[k]);case 'cpl':return x.leads?eur(x.cpl):`<span style="color:var(--muted2)">${t('noLead')}</span>`;
+ case 'ctr':case 'conv':return pct(x[k],2);case 'hook':case 'v75r':return x.kind==='video'?pct(x[k]):'–';
+ default:return int(x[k]);}}
+function table(){
+  const th=document.querySelector('#tbl thead'),tb=document.querySelector('#tbl tbody');
+  th.innerHTML='<tr>'+COLDEF.map(([k,l])=>`<th data-k="${k}" class="${k===sortK?'sorted':''}" data-arrow="${sortD>0?'▲':'▼'}">${t(l)}</th>`).join('')+'</tr>';
+  const val=x=>{const v=x[sortK];if(v==null)return sortD>0?Infinity:-Infinity;return typeof v==='string'?v:v};
+  const rows=[...items].sort((a,b)=>{const A=val(a),B=val(b);return (A>B?1:A<B?-1:0)*sortD});
+  const withLeads=items.filter(x=>x.leads>0&&!x.low);
+  const bestCpl=Math.min(...withLeads.map(x=>x.cpl)),bestLeads=Math.max(...items.map(x=>x.leads));
+  tb.innerHTML=rows.map(x=>`<tr data-id="${x.name}">`+COLDEF.map(([k])=>{
+    const cls=(k==='cpl'&&x.cpl===bestCpl)||(k==='leads'&&x.leads===bestLeads)?' best':'';
+    return `<td class="${k==='name'||k==='kind'||k==='status'?'':'n'}${cls}">${fmt(k,x)}</td>`}).join('')+'</tr>').join('');
+  th.querySelectorAll('th').forEach(h=>h.onclick=()=>{const k=h.dataset.k;if(k===sortK)sortD*=-1;else{sortK=k;sortD=(k==='name'||k==='cpl'||k==='cpm')?1:-1}table()});
+  tb.querySelectorAll('tr').forEach(r=>r.onclick=()=>document.getElementById('c_'+r.dataset.id).scrollIntoView({behavior:'smooth'}));
+}
+function bars(){
+  const rows=[...items].sort((a,b)=>b.leads-a.leads||b.spend-a.spend),mx=Math.max(...rows.map(x=>x.leads))||1;
+  document.getElementById('bars').innerHTML=rows.map(x=>{const w=x.leads/mx*100;const lab=`${int(x.leads)} leads${x.leads?' · CPL '+eur(x.cpl):''}`;
+   return `<div class="bar"><div class="nm" title="${x.name}"><span class="dot" style="background:${x.kind==='video'?'var(--vid)':'var(--img)'}"></span>${nice(x.name)}</div>
+   <div class="tr"><div class="fl" style="width:${w}%;background:${x.kind==='video'?'var(--vid)':'var(--img)'}"></div><span class="lb ${w>45?'in':'out'}" style="${w>45?'':'left:calc('+w+'% + 8px)'}">${lab}</span></div></div>`}).join('')
+   +`<div class="note">${t('lowNote')}</div>`;
+}
+function creative(x){
+  const M=[['spend',eur(x.spend)],['impr',int(x.impr)],['cpm',eur(x.cpm)],['ctr',pct(x.ctr,2)],['link',int(x.link)],['lpv',int(x.lpv)],['leads',int(x.leads),1],['cpl',x.leads?eur(x.cpl):'–',1]];
+  if(x.kind==='video')M.push(['conv',pct(x.conv,1)],['hook',pct(x.hook)],['v75',pct(x.v75r)],['thru',int(x.thru)]);else M.push(['conv',pct(x.conv,1)]);
+  const media=x.kind==='video'
+   ?`<video controls preload="none" playsinline poster="media/${x.name}.jpg"><source src="media/${x.name}.mp4" type="video/mp4"></video>`
+   :`<img src="media/${x.name}.jpg" alt="${x.name}" loading="lazy" onclick="openLb(this.src)">`;
+  let ret='';
+  if(x.kind==='video'){const mx=x.impr||1;ret=`<div class="ret"><div class="t">${t('ret')}</div>`+[['25%',x.p25],['50%',x.p50],['75%',x.p75],['100%',x.p100]].map(([l,v])=>
+    `<div class="row"><span>${l}</span><div class="tr"><div class="fl" style="width:${Math.min(100,v/(x.p25||1)*100)}%"></div></div><span class="val">${pct(v/mx)} · ${int(v)}</span></div>`).join('')+'</div>';}
+  let tx='';
+  if(x.kind==='video'){const def=L==='es'?'es':'pt';
+    tx=`<details class="tx"><summary>${t('tx')}</summary><div class="txb"><div class="sw"><button data-v="es" class="${def==='es'?'active':''}">${t('orig')}</button><button data-v="pt" class="${def==='pt'?'active':''}">${t('tr')}</button></div>
+    <div class="tv" data-v="es" ${def==='es'?'':'hidden'}>${x.es.map(p=>`<p>${p}</p>`).join('')}</div><div class="tv" data-v="pt" ${def==='pt'?'':'hidden'}>${x.pt.map(p=>`<p>${p}</p>`).join('')}</div></div></details>`;}
+  const twin=x.same_art?items.find(y=>y.same_art&&y.name!==x.name):null;
+  return `<div class="card creative" id="c_${x.name}"><div class="media">${media}</div><div class="info">
+   <h3>${nice(x.name)}<span class="tag ${active(x.status)?'t-on':'t-off'}">${active(x.status)?t('on'):t('off')}</span>${x.low?`<span class="tag t-low">${t('low')}</span>`:''}</h3>
+   <div class="meta">${x.name}${x.dur?` · ${t('dur')} ${x.dur}s`:''}</div>
+   <div class="mgrid">${M.map(([k,v,h])=>`<div class="m${h?' hl':''}"><div class="l">${t(k)}</div><div class="v">${v}</div></div>`).join('')}</div>
+   ${ret}${tx}${twin?`<div class="note">${t('same').replace('{x}',nice(twin.name))}</div>`:''}</div></div>`;
+}
+function lists(){
+  const by=(k)=>items.filter(x=>x.kind===k).sort((a,b)=>b.leads-a.leads||b.spend-a.spend);
+  document.getElementById('vidList').innerHTML=by('video').map(creative).join('');
+  document.getElementById('imgList').innerHTML=by('image').map(creative).join('');
+  document.querySelectorAll('.txb .sw button').forEach(b=>b.onclick=()=>{const box=b.closest('.txb');box.querySelectorAll('.sw button').forEach(x=>x.classList.toggle('active',x===b));box.querySelectorAll('.tv').forEach(v=>v.hidden=v.dataset.v!==b.dataset.v)});
+  document.querySelectorAll('video').forEach(v=>v.addEventListener('play',()=>document.querySelectorAll('video').forEach(o=>{if(o!==v)o.pause()})));
+}
+function openLb(s){document.getElementById('lbImg').src=s;document.getElementById('lb').classList.add('open')}
+function toggleTheme(){const d=document.documentElement;d.dataset.theme=d.dataset.theme==='dark'?'light':'dark';try{localStorage.setItem('orl-theme',d.dataset.theme)}catch(e){}}
+function render(){
+  document.documentElement.lang=L==='es'?'es':'pt-BR';document.title=t('title');
+  document.querySelectorAll('[data-t]').forEach(e=>e.textContent=t(e.dataset.t));
+  document.querySelectorAll('#langSeg button').forEach(b=>b.classList.toggle('active',b.dataset.l===L));
+  document.getElementById('period').textContent=`${t('per')}: ${D.d0} – ${D.d1}`;
+  document.getElementById('campLine').textContent=t('campLine').replace('{c}',D.campaigns.join(', '));
+  kpis();table();bars();lists();
+}
+document.querySelectorAll('#langSeg button').forEach(b=>b.onclick=()=>{L=b.dataset.l;try{localStorage.setItem('orl-lang',L)}catch(e){}render()});
+render();
+</script>
+</body>
+</html>
