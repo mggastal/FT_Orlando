@@ -3,14 +3,15 @@
   "cor": "#B8860B",
   "letra": "EI",
   "lancamentos": [
+    "PERPETUO-GR",
     "GR14"
   ],
   "moeda": "EUR",
   "moeda_simbolo": "€",
-  "atualizado": "23/11/2026",
+  "atualizado": "24/11/2026",
   "kpis": {
-    "spend": 10897.93,
-    "leads": 493,
-    "cpl": 22.11
+    "spend": 43.71,
+    "leads": 16,
+    "cpl": 2.73
   }
 }

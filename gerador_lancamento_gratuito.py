@@ -37,7 +37,8 @@ COR_ACENTO       = "#B8860B"
 #   ("LABEL","TERMO")   → botão mostra LABEL, busca "contém TERMO" no nome da campanha
 # Primeiro item = selecionado por padrão ao abrir o dashboard.
 LANCAMENTO_CODS  = [
-    ("GR14",      "GR14",      True),   # 3º campo True = lançamento EM CURSO (marcação + default)
+    ("PERPETUO-GR", "PERPETUO-GR", True),   # 3º campo True = EM CURSO (marcação + default). Perpétuo: só Meta Ads
+    ("GR14",      "GR14",      False),
     # Ocultos por ora — descomente para trazer de volta o botão do lançamento:
     # ("VSL",       "VSL"),
     # ("HUB4C",     "HUB_4C"),
@@ -53,6 +54,8 @@ LANCAMENTO_CODS  = [
 USAR_PESQUISA    = True            # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
 USAR_AC          = True            # True = ativa aba ActiveCampaign (CRM) + cruzamento UTM
+LCT_META_ONLY    = ["PERPETUO-GR"]   # lançamentos sem CRM/Pesquisa/LPs: leads = Meta (Action Leads)
+MOSTRAR_TUDO     = False             # botão "Tudo" (soma lançamentos) oculto
 LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = desativa aba
 
 # ══ MOEDA ══════════════════════════════════════════════
@@ -246,9 +249,9 @@ def _temp_publico(nome):
        com 'TF' e classificaria tudo como frio.
        Retorna 'quente', 'frio' ou None (indefinido)."""
     n = str(nome).upper()
-    if ("-TT-" in n) or ("🟡" in n) or ("🔴" in n) or ("2FASE" in n) or ("3FASE" in n):
+    if ("-HOT-" in n) or ("-TT-" in n) or ("🟡" in n) or ("🔴" in n) or ("2FASE" in n) or ("3FASE" in n):
         return "quente"
-    if ("-TF-" in n) or ("🔵" in n) or ("1FASE" in n):
+    if ("-COLD-" in n) or ("-TF-" in n) or ("🔵" in n) or ("1FASE" in n):
         return "frio"
     return None
 
@@ -966,6 +969,8 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
     html=replace_js_const(html,"LANCAMENTO_CODS",  LANCAMENTO_CODS)
     html=replace_js_const(html,"LANCAMENTO_EM_CURSO", LANCAMENTO_EM_CURSO)
     html=replace_js_const(html,"MOSTRAR_VENDAS",  MOSTRAR_VENDAS)
+    html=replace_js_const(html,"LCT_META_ONLY",   LCT_META_ONLY)
+    html=replace_js_const(html,"MOSTRAR_TUDO",    MOSTRAR_TUDO)
     html=replace_js_const(html,"DATA_GERACAO",     hoje_madrid().strftime("%Y-%m-%d"))
 
     _cpl_bom   = globals().get("CPL_BOM",   globals().get("CPA_BOM",   5.0))

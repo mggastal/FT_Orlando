@@ -38,6 +38,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .sb-item .ico{font-size:13px;width:18px;text-align:center;}
 .sb-lct{margin:0 16px 12px;padding:7px 10px;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);}
 .sb-lct-lbl{font-size:9px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.sb-ft{margin-top:auto;padding:14px 18px 18px;display:flex;flex-direction:column;gap:6px;text-decoration:none;opacity:.75;transition:opacity .2s}.sb-ft:hover{opacity:1}.sb-ft span{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;font-weight:600}.sb-ft img{width:110px;height:auto}
 .sb-lct-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;}
 .sb-footer{padding:10px 16px;border-top:1px solid rgba(255,255,255,.05);}
 .sb-footer span{font-size:10px;color:rgba(255,255,255,.25);}
@@ -378,6 +379,7 @@ details.desk-only{display:block!important;}
     <button class="sb-item" id="sbCrm" onclick="goPage('crm',this)"><span class="ico">🎯</span><span data-i18n="nav_crm">ActiveCampaign</span></button>
   </nav>
   <div class="sb-lct-val" id="sbLct">—</div>
+  <div class="sb-ft"><span>Desenvolvido por</span><img src="Criativos/media/fortraffic_branco.png" alt="Fortraffic"></div>
   
 </aside>
 
@@ -386,7 +388,7 @@ details.desk-only{display:block!important;}
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;padding:9px 20px;">
     <div class="topbar-l">
       <button class="mob-menu" onclick="toggleSb()">☰</button>
-      <!-- build sobe v21 --><div class="page-title" id="pageTitle">Overview</div>
+      <div class="page-title" id="pageTitle">Overview</div>
       <div class="live-badge" id="liveBadge"><div class="pulse" id="livePulse"></div><span id="liveTxt">—</span></div>
       <div class="desk-only" style="display:flex;align-items:center;gap:5px;margin-left:2px;">
         <span style="font-size:9px;color:var(--muted2);font-weight:600">Aa</span>
@@ -469,6 +471,10 @@ details.desk-only{display:block!important;}
       <div class="section" style="margin-top:16px">
         <div class="sec-hd" data-i18n="ranking_criativos">Ranking de Criativos</div>
         <div class="ads-grid" id="adsGrid"></div>
+      </div>
+      <div class="section" id="pubSection" style="margin-top:16px;display:none">
+        <div class="sec-hd"><span data-i18n="ranking_publicos">Ranking de Públicos</span> <span style="font-size:10px;font-weight:500;color:var(--muted2);text-transform:none;letter-spacing:0">· <span data-i18n="pub_sub">conjuntos somados por nome · clique no cabeçalho para ordenar</span></span></div>
+        <div class="tc" id="tPublicos"></div>
       </div>
     </div>
 
@@ -597,6 +603,10 @@ const VENDAS_DATA = null;
 
 // ═══ CONFIG (injetados pelo gerador) ═══
 const AC_DATA = null;
+const LCT_META_ONLY = [];   // lançamentos sem CRM/Pesquisa/LPs (só Meta Ads)
+const MOSTRAR_TUDO = true;  // botão "Tudo" na barra de lançamentos
+function _metaOnly(){ return Array.isArray(LCT_META_ONLY) && LCT_META_ONLY.includes(filtroAtivo); }
+function _acOn(){ return (typeof AC_DATA!=='undefined' && AC_DATA && AC_DATA!==false) && !_metaOnly(); }
 const LCT_TERMOS = null;
 const LANCAMENTO_CODS = null;
 const LANCAMENTO_EM_CURSO = null;
@@ -636,6 +646,8 @@ const TRANSLATIONS = {
     temp_quente:      'Quente',
     temp_frio:        'Frio',
     chart_leads_ttl:  'Leads Reais (CRM) & Investimento',
+    chart_leads_ttl_meta: 'Leads Diários (Meta) & Investimento',
+    chart_leads_sub_meta: 'Leads do Meta Ads (barras) · Invest. (linha) · CPL (linha tracejada)',
     gran_dia:         'Diário',
     gran_sem:         'Semanal',
     gran_mes:         'Mensal',
@@ -646,6 +658,7 @@ const TRANSLATIONS = {
     faixa:            'Faixa Etária',
     posicionamento:   'Posicionamento',
     ranking_criativos:'Ranking de Criativos',
+    ranking_publicos:'Ranking de Públicos', pub_sub:'conjuntos somados por nome · clique no cabeçalho para ordenar', pub_col:'Público', pub_temp:'Temp.', pub_camps:'Camp.', pub_quente:'Quente', pub_frio:'Frio',
     seg_fonte_meta:   'leads do Meta Ads (sem recorte no CRM)',
     period_ontem:     'Ontem',
     period_tudo:      'Tudo',
@@ -826,6 +839,8 @@ const TRANSLATIONS = {
     temp_quente:      'Caliente',
     temp_frio:        'Frío',
     chart_leads_ttl:  'Leads Reales (CRM) & Inversión',
+    chart_leads_ttl_meta: 'Leads Diarios (Meta) & Inversión',
+    chart_leads_sub_meta: 'Leads de Meta Ads (barras) · Inversión (línea) · CPL (línea punteada)',
     gran_dia:         'Diario',
     gran_sem:         'Semanal',
     gran_mes:         'Mensual',
@@ -836,6 +851,7 @@ const TRANSLATIONS = {
     faixa:            'Rango de Edad',
     posicionamento:   'Posicionamiento',
     ranking_criativos:'Ranking de Creativos',
+    ranking_publicos:'Ranking de Públicos', pub_sub:'conjuntos sumados por nombre · haz clic en el encabezado para ordenar', pub_col:'Público', pub_temp:'Temp.', pub_camps:'Camp.', pub_quente:'Caliente', pub_frio:'Frío',
     seg_fonte_meta:   'leads de Meta Ads (sin desglose en el CRM)',
     period_ontem:     'Ayer',
     period_tudo:      'Todo',
@@ -998,7 +1014,10 @@ const TRANSLATIONS = {
 
 let currentLang = localStorage.getItem('lct-lang') || 'PT';
 
-function t(key){ return (TRANSLATIONS[currentLang]||TRANSLATIONS['PT'])[key] || key; }
+function t(key){
+  if(key==='chart_leads_ttl'||key==='chart_leads_sub'){ let mo=false; try{ mo=_metaOnly(); }catch(e){} if(mo) key+='_meta'; }
+  return (TRANSLATIONS[currentLang]||TRANSLATIONS['PT'])[key] || key;
+}
 
 function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el=>{
@@ -1271,7 +1290,7 @@ function hexA(hex,a){return hex+Math.round(a*255).toString(16).padStart(2,'0');}
 function buildFunnel(mk){
   if(!mk) return;
   // Se houver CRM, o último passo do funil mostra os LEADS REAIS (CRM) em vez dos leads do Meta
-  const _temAC=(typeof AC_DATA!=='undefined'&&AC_DATA&&AC_DATA!==false);
+  const _temAC=_acOn();
   const leadsFinal=(_temAC&&mk.leadsReais!=null)?mk.leadsReais:mk.leads;
   const leadsLbl=(_temAC&&mk.leadsReais!=null)?(t('f_leads')+' · CRM'):t('f_leads');
   const steps=[
@@ -1322,7 +1341,7 @@ function renderMeta(){
   const ldMK=md?.leads?.reduce((a,b)=>a+(b||0),0)||0;
   const cplMK=spMK>0&&ldMK>0?r2(spMK/ldMK):null;
   const cplCor=cplMK!=null?(cplMK<=CPL_BOM?'#059669':cplMK<=CPL_MEDIO?'#d97706':'#dc2626'):'var(--muted)';
-  const _temAC=(typeof AC_DATA!=='undefined'&&AC_DATA&&AC_DATA!==false);
+  const _temAC=_acOn();
   const kpiEl=document.getElementById('metaKpis');
   if(_temAC){
     const ldReal=(typeof acRowsPeriodo==='function')?acRowsPeriodo().length:0;
@@ -1396,6 +1415,7 @@ function renderMeta(){
 
   buildTable('tCamps', mt?.camps, t('col_camp'));
   renderAds(mt?.ads);
+  renderPublicos(mt?.adsets);
   renderSeg();
 }
 
@@ -1552,7 +1572,7 @@ function getMBD(){
 
 
 // ═══ CRUZAMENTO: leads reais (CRM) por campanha/conjunto/criativo ═══
-function _temAC(){ return (typeof AC_DATA!=='undefined' && AC_DATA && AC_DATA!==false); }
+function _temAC(){ return _acOn(); }
 function _norm(s){ return String(s||'').trim().toLowerCase(); }
 // campanha: match EXATO — nomes de campanha são completos e distintos; substring causaria
 // dupla contagem (ex: "...-TT-VD" está contido em "...-TT-VD-LP_A").
@@ -1591,7 +1611,7 @@ function buildTable(elId,data,mainCol){
   if(!data?.length){document.getElementById(elId).innerHTML=`<div style="padding:12px;color:var(--muted);font-size:12px">${t('sem_dados')}</div>`;return;}
   const mt=getMT();
 
-  const temAC=(typeof AC_DATA!=='undefined' && AC_DATA && AC_DATA!==false);
+  const temAC=_acOn();
   const COLS=[
     {k:'spend',l:t('col_invest'),f:fR},
     {k:'imp',l:t('col_impr'),cls:'cn'},{k:'lc',l:t('col_cliques'),cls:'cn'},
@@ -1799,10 +1819,41 @@ function toggleAdsetRow(campId,adsetName,campName,rowEl){
   }
 }
 
+// ═══ RANKING DE PÚBLICOS (só lançamentos meta-only, ex.: PERPETUO-GR) ═══
+let _pubSort={k:'ld',d:-1};
+function _pubTemp(camp){ const n=String(camp||'').toUpperCase(); if(/-HOT-|-TT-/.test(n)) return 'q'; if(/-COLD-|-TF-/.test(n)) return 'f'; return ''; }
+function renderPublicos(sets){
+  const sec=document.getElementById('pubSection'); if(!sec) return;
+  if(!_metaOnly()){ sec.style.display='none'; return; }
+  sec.style.display='';
+  const el=document.getElementById('tPublicos');
+  if(!sets||!sets.length){ el.innerHTML=`<div style="padding:12px;color:var(--muted);font-size:12px">${t('sem_dados')}</div>`; return; }
+  const m={};
+  sets.forEach(s=>{
+    const tp=_pubTemp(s.camp); const key=s.n+'|'+tp;
+    const o=m[key]||(m[key]={n:s.n,tp,camps:new Set(),spend:0,imp:0,lc:0,pv:0,ld:0});
+    o.camps.add(s.camp); o.spend+=s.spend||0; o.imp+=s.imp||0; o.lc+=s.lc||0; o.pv+=s.pv||0; o.ld+=s.ld||0;
+  });
+  let rows=Object.values(m).map(o=>({...o,nc:o.camps.size,ctr:o.imp?o.lc/o.imp*100:null,cr:o.lc?o.pv/o.lc*100:null,tx_cv:o.pv?o.ld/o.pv*100:null,cpl:o.ld?o.spend/o.ld:null,cpm:o.imp?o.spend/o.imp*1000:null}));
+  const {k,d}=_pubSort;
+  rows.sort((a,b)=>{const x=a[k],y=b[k]; if(x==null&&y==null) return 0; if(x==null) return 1; if(y==null) return -1; return (typeof x==='string'?x.localeCompare(y):x-y)*d;});
+  const C=[{k:'n',l:t('pub_col')},{k:'tp',l:t('pub_temp')},{k:'nc',l:t('pub_camps'),f:fN},{k:'spend',l:t('col_invest'),f:fR},{k:'imp',l:t('col_impr'),f:fN},{k:'lc',l:t('col_cliques'),f:fN},{k:'pv',l:'PV',f:fN},{k:'ld',l:t('col_leads'),f:fN},{k:'ctr',l:'CTR',f:fP},{k:'cr',l:'C.Rate',f:fP},{k:'tx_cv',l:'Tx.Conv',f:fP},{k:'cpl',l:t('col_cpl'),f:fR,c:cplCls},{k:'cpm',l:t('col_cpm'),f:fR}];
+  const arrow=c=>c.k===k?(d<0?' ▼':' ▲'):'';
+  const head='<tr>'+C.map((c,i)=>`<th class="${i>1?'num':''}" style="cursor:pointer;user-select:none" onclick="_pubSortBy('${c.k}')">${c.l}${arrow(c)}</th>`).join('')+'</tr>';
+  const tpLbl=v=>v==='q'?`<span style="color:#ea580c;font-weight:700">${t('pub_quente')}</span>`:v==='f'?`<span style="color:#3b82f6;font-weight:700">${t('pub_frio')}</span>`:'—';
+  const body=rows.map(r=>'<tr>'+C.map((c,i)=>{
+    if(c.k==='n') return `<td style="font-size:11px;font-weight:600;white-space:nowrap" title="${[...r.camps].join('\n')}">${r.n}</td>`;
+    if(c.k==='tp') return `<td style="font-size:11px">${tpLbl(r.tp)}</td>`;
+    return `<td class="num ${c.c?c.c(r[c.k]):''}">${c.f(r[c.k])}</td>`;
+  }).join('')+'</tr>').join('');
+  el.innerHTML=`<table style="min-width:820px;width:100%"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+function _pubSortBy(k){ _pubSort = (_pubSort.k===k)?{k,d:-_pubSort.d}:{k,d:(k==='n'||k==='tp'||k==='cpl'||k==='cpm')?1:-1}; const mt=getMT(); renderPublicos(mt?.adsets); }
+
 function renderAds(ads){
   const el=document.getElementById('adsGrid');
   if(!ads?.length){el.innerHTML=`<div style="color:var(--muted);font-size:12px;padding:8px">${t('sem_criativos')}</div>`;return;}
-  const _adTemAC=(typeof AC_DATA!=='undefined'&&AC_DATA&&AC_DATA!==false);
+  const _adTemAC=_acOn();
   el.innerHTML=ads.slice(0,24).map(ad=>{
     const img=ad.thumb?`<img src="${ad.thumb}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=ad-img-ph>🖼️</div>'">`:'<div class="ad-img-ph">🖼️</div>';
     const stU=String(ad.status||'').toUpperCase().trim();
@@ -1982,7 +2033,7 @@ function renderDiario(){
 function renderDiarioCharts(){
   let md=getDailyForCamp()||getMD();
   if(!md) return;
-  const _temACd=(typeof AC_DATA!=='undefined'&&AC_DATA&&AC_DATA!==false);
+  const _temACd=_acOn();
   // injeta leads reais do CRM por dia → CPL e Tx.Conv passam a usar leads reais (não Meta)
   if(_temACd){
     const rows=(typeof acRowsPeriodo==='function')?acRowsPeriodo():[];
@@ -2370,7 +2421,7 @@ function buildLctBar(){
     return `<button class="lct-btn${filtroAtivo===cod?' active':''}${isLive?' is-live':''}" onclick="setFiltroAtivo('${cod.replace(/'/g,"\\'")}',this)">${cod}${badge}</button>`;
   }).join('')
     // botão "Tudo" só faz sentido com mais de um lançamento; com um só, ele = o próprio lançamento
-    + (LANCAMENTO_CODS.length>1 ? `<button class="lct-btn${filtroAtivo==='all'?' active':''}" id="btnLctAll" onclick="setFiltroAtivo('all',this)">${t('lct_tudo')}</button>` : '');
+    + (LANCAMENTO_CODS.length>1 && MOSTRAR_TUDO ? `<button class="lct-btn${filtroAtivo==='all'?' active':''}" id="btnLctAll" onclick="setFiltroAtivo('all',this)">${t('lct_tudo')}</button>` : '');
   // com um único lançamento, garante que ele seja o filtro ativo (não 'all')
   if(LANCAMENTO_CODS.length===1 && filtroAtivo==='all'){ filtroAtivo=LANCAMENTO_CODS[0]; }
 }
@@ -2417,7 +2468,23 @@ function setFiltroAtivo(grupo,btn){
   filtroAtivo=grupo;
   document.querySelectorAll('#lctBar button').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  const mf=document.getElementById('metaCampFilter');
+  if(mf) delete mf.dataset.campsKey;
+  if(typeof metaCampSel!=='undefined') metaCampSel=new Set();
+  updSbLct();
   rerenderActive();
+}
+// mostra/oculta itens do menu conforme o lançamento ativo (meta-only = só Meta Ads, Diárias)
+let _sbBase=null;
+function updSbLct(){
+  const ids=['sbPesquisa','sbLp','sbCrm'];
+  if(!_sbBase){ _sbBase={}; ids.forEach(i=>{const e=document.getElementById(i); _sbBase[i]=e?e.style.display:'none';}); }
+  const mo=_metaOnly();
+  ids.forEach(i=>{const e=document.getElementById(i); if(e) e.style.display=mo?'none':_sbBase[i];});
+  const cur=document.querySelector('.page-section.active')?.id?.replace('page-','');
+  if(mo && ['pesquisa','lp','crm'].includes(cur)){
+    goPage('meta', document.querySelector('.sb-item'));
+  }
 }
 function toggleLabels(el){
   showLabels=!showLabels;
@@ -2455,7 +2522,7 @@ function _tempDaCampanha(nome){
 function renderLp(){
   const wrap=document.getElementById('lpCompWrap');
   const mt=getMT();
-  const temAC=(typeof AC_DATA!=='undefined'&&AC_DATA&&AC_DATA!==false);
+  const temAC=_acOn();
   if(!mt||!mt.camps||!mt.camps.length){ wrap.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px">Sem dados de campanha para este período.</div>'; return; }
 
   // leads reais por nome de campanha (período ativo)
@@ -2656,7 +2723,7 @@ function _isPago(r){ return String(r.us||'').trim().toLowerCase()==='meta-ads'; 
 // modo: 'pago' (só utm_source=meta-ads — usado em CPL/funil/temperatura/métricas/LP),
 //       'organico' (source != meta-ads), 'todos' (ambos). Default = 'pago'.
 function acRowsPeriodo(modo){
-  if(!AC_DATA||!AC_DATA.raw) return [];
+  if(!AC_DATA||!AC_DATA.raw||_metaOnly()) return [];
   modo = modo || 'pago';
   const termo=(filtroAtivo && filtroAtivo!=='all' && typeof LCT_TERMOS!=='undefined')?(LCT_TERMOS[filtroAtivo]||filtroAtivo):null;
   const campSel=(typeof metaCampSel!=='undefined' && metaCampSel && metaCampSel.size>0)?metaCampSel:null;
@@ -2881,6 +2948,7 @@ function closeSb(){document.getElementById('sidebar').classList.remove('open');d
   }
   const _sbCrm=document.getElementById('sbCrm');
   if(_sbCrm) _sbCrm.style.display=(AC_DATA&&AC_DATA!==false)?'':'none';
+  updSbLct();
   renderMeta();
 })();
 
