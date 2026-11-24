@@ -54,6 +54,7 @@ LANCAMENTO_CODS  = [
 USAR_PESQUISA    = True            # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
 USAR_AC          = True            # True = ativa aba ActiveCampaign (CRM) + cruzamento UTM
+USAR_CRIPUB      = True              # aba "Criativos & Públicos" (soma por nome entre campanhas, estilo Sérgio)
 LCT_META_ONLY    = ["PERPETUO-GR"]   # lançamentos sem CRM/Pesquisa/LPs: leads = Meta (Action Leads)
 MOSTRAR_TUDO     = False             # botão "Tudo" (soma lançamentos) oculto
 LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = desativa aba
@@ -336,6 +337,41 @@ def meta_raw(df):
             "lc":int(r["link_clicks"]),"pv":int(r["page_view"])
         })
     return rows
+
+def build_cripub(df, img_dir):
+    """Base diária no nível anúncio, codificada em dicionários p/ ficar compacta.
+    O front agrega por nome do criativo / nome do conjunto respeitando
+    lançamento, período e datas.
+      combos: [camp_idx, adset_idx, ad_idx, thumb, status]
+      rows:   [day_idx, combo_idx, spend, imp, link_clicks, page_view, leads]"""
+    camps=sorted(df["campaign"].astype(str).unique().tolist())
+    adsets=sorted(df["adset"].astype(str).unique().tolist())
+    ads=sorted(df["ad"].astype(str).unique().tolist())
+    ci={n:i for i,n in enumerate(camps)}; ai={n:i for i,n in enumerate(adsets)}; di={n:i for i,n in enumerate(ads)}
+    camp_status, adset_status, ad_status = build_status_maps(df)
+    thumb_url={}
+    if "thumb" in df.columns:
+        for _,r in df[df["thumb"].notna()&(df["thumb"].astype(str)!="nan")].iterrows():
+            k=(str(r["campaign"]),str(r["adset"]),str(r["ad"]))
+            if k not in thumb_url: thumb_url[k]=str(r["thumb"])
+    agg=df.groupby(["date","campaign","adset","ad"]).agg(
+        spend=("spend","sum"),impressions=("impressions","sum"),link_clicks=("link_clicks","sum"),
+        page_view=("page_view","sum"),leads=("leads","sum")).reset_index()
+    combos=[]; combo_idx={}; days=[]; day_idx={}; rows=[]
+    for _,r in agg.sort_values("date").iterrows():
+        k=(str(r["campaign"]),str(r["adset"]),str(r["ad"]))
+        if k not in combo_idx:
+            combo_idx[k]=len(combos)
+            combos.append([ci[k[0]],ai[k[1]],di[k[2]],
+                           download_thumb(thumb_url.get(k,""),img_dir),ad_status.get(k,"")])
+        d=r["date"].strftime("%d/%m/%y")
+        if d not in day_idx: day_idx[d]=len(days); days.append(d)
+        sp=round(float(r["spend"]),2); imp=int(r["impressions"]); lc=int(r["link_clicks"])
+        pv=int(r["page_view"]); ld=int(r["leads"])
+        if sp==0 and imp==0 and ld==0: continue
+        rows.append([day_idx[d],combo_idx[k],sp,imp,lc,pv,ld])
+    return {"camps":camps,"camp_codes":[matched_codes(c) for c in camps],
+            "adsets":adsets,"ads":ads,"days":days,"combos":combos,"rows":rows}
 
 # ══ STATUS (bolinha verde/cinza) ══════════════════════
 _STATUS_PRIORITY=["ACTIVE","WITH_ISSUES","PAUSED","ADSET_PAUSED","CAMPAIGN_PAUSED","ARCHIVED"]
@@ -949,7 +985,7 @@ def build_lpv_data(df):
     return result
 
 
-def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, lpv_data=None, vendas_data=None, ac_data=None):
+def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, lpv_data=None, vendas_data=None, ac_data=None, cripub=None):
     html=Path(tpl).read_text(encoding="utf-8")
     html=replace_js_const(html,"META_KPIS",       meta_k)
     html=replace_js_const(html,"META_DAILY",       meta_d)
@@ -970,6 +1006,7 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
     html=replace_js_const(html,"LANCAMENTO_EM_CURSO", LANCAMENTO_EM_CURSO)
     html=replace_js_const(html,"MOSTRAR_VENDAS",  MOSTRAR_VENDAS)
     html=replace_js_const(html,"LCT_META_ONLY",   LCT_META_ONLY)
+    html=replace_js_const(html,"CRIPUB",          cripub if (USAR_CRIPUB and cripub) else False)
     html=replace_js_const(html,"MOSTRAR_TUDO",    MOSTRAR_TUDO)
     html=replace_js_const(html,"DATA_GERACAO",     hoje_madrid().strftime("%Y-%m-%d"))
 
@@ -1082,7 +1119,9 @@ def main():
     print("\n[HTML]")
     if not Path(TEMPLATE_FILE).exists():
         print(f"  ERRO: {TEMPLATE_FILE} não encontrado"); return
-    html=inject_all(TEMPLATE_FILE,m_k,m_d,m_dc,m_raw,m_t,m_bd,pes,lpv_data,vendas_data,ac_data)
+    cripub=build_cripub(df_meta,img_dir) if USAR_CRIPUB else None
+    if cripub: print(f"  ✓ Criativos & Públicos: {len(cripub['ads'])} criativos | {len(cripub['adsets'])} públicos | {len(cripub['rows'])} linhas")
+    html=inject_all(TEMPLATE_FILE,m_k,m_d,m_dc,m_raw,m_t,m_bd,pes,lpv_data,vendas_data,ac_data,cripub)
     Path(OUTPUT_FILE).write_text(html,encoding="utf-8")
     print(f"  ✓ {OUTPUT_FILE} ({len(html)//1024}KB)")
 
