@@ -55,7 +55,11 @@ USAR_PESQUISA    = True            # False = oculta aba Pesquisa
 USAR_VENDAS      = False           # False = oculta aba Vendas
 USAR_AC          = True            # True = ativa aba ActiveCampaign (CRM) + cruzamento UTM
 USAR_CRIPUB      = True              # aba "Criativos & Públicos" (soma por nome entre campanhas, estilo Sérgio)
-LCT_META_ONLY    = ["PERPETUO-GR"]   # lançamentos sem CRM/Pesquisa/LPs: leads = Meta (Action Leads)
+LCT_META_ONLY    = ["PERPETUO-GR"]   # lançamentos sem Pesquisa/LPs/aba CRM (layout enxuto)
+# Leads do CRM no lugar dos leads do Meta: {label: aba}. A aba tem 1 linha por lead
+# (Fecha, utm_campaign, utm_term = público, utm_content = anúncio). Os leads do Meta desses
+# lançamentos são ZERADOS e substituídos pela contagem do CRM casada por dia+campanha+conjunto+anúncio.
+LEADS_CRM_ABA    = {"PERPETUO-GR": "Leads Evergreen GR"}
 MOSTRAR_TUDO     = False             # botão "Tudo" (soma lançamentos) oculto
 LPV_LANCAMENTO   = None          # Lançamento com comparativo de LPs; None = desativa aba
 
@@ -835,6 +839,60 @@ def load_active_campaign():
     print(f"     {len(df)} leads reais | {df['data'].min().date() if len(df) else '—'} → {df['data'].max().date() if len(df) else '—'}")
     return df
 
+AC_DATA_LCT = {}   # {label: {"raw":[...]}} → aba ActiveCampaign por lançamento (todos os leads, pago + orgânico)
+
+def apply_crm_leads(df):
+    """Troca os leads do Meta pelos leads do CRM nos lançamentos de LEADS_CRM_ABA.
+       Só entram nas campanhas os leads com utm_source=meta-ads e utm_medium=paid, cada um
+       casado com a sua campanha/conjunto/anúncio. Todos os leads (inclusive orgânicos) vão
+       para AC_DATA_LCT[label] → aba ActiveCampaign."""
+    import urllib.parse
+    for lb, aba in (globals().get("LEADS_CRM_ABA") or {}).items():
+        termo = _LCT_TERMO_POR_LABEL.get(lb, lb).lower()
+        print(f"  Lendo leads CRM [{lb}] da aba '{aba}'...")
+        crm = pd.read_csv(sheet_url(urllib.parse.quote(aba)), dtype=str).fillna("")
+        crm.columns = [str(c).strip().lower() for c in crm.columns]
+        crm["date"] = pd.to_datetime(crm["fecha"].str.strip(), errors="coerce", dayfirst=True)
+        sem_data = int(crm["date"].isna().sum())
+        crm = crm.dropna(subset=["date"])
+        for c in ["utm_source","utm_medium","utm_campaign","utm_term","utm_content"]:
+            if c not in crm.columns: crm[c] = ""
+            crm[c] = crm[c].str.strip()
+        _pago = (crm["utm_source"].str.lower()=="meta-ads") & (crm["utm_medium"].str.lower()=="paid")
+        AC_DATA_LCT[lb] = {"raw": [{"d": r["date"].strftime("%d/%m/%y"), "us": r["utm_source"], "um": r["utm_medium"],
+                                    "uc": r["utm_campaign"], "uco": r["utm_content"], "ut": r["utm_term"], "p": int(pg)}
+                                   for (_, r), pg in zip(crm.iterrows(), _pago)]}
+        n_org = int((~_pago).sum())
+        crm = crm[_pago]
+        fora = crm[~crm["utm_campaign"].str.lower().str.contains(termo, regex=False)]
+        crm = crm[crm["utm_campaign"].str.lower().str.contains(termo, regex=False)]
+        cnt = crm.groupby(["date","utm_campaign","utm_term","utm_content"]).size().rename("crm").reset_index()
+        cnt.columns = ["date","campaign","adset","ad","crm"]
+        m = df["campaign"].astype(str).str.lower().str.contains(termo, regex=False)
+        df.loc[m, "leads"] = 0
+        sub = df[m][["date","campaign","adset","ad"]].reset_index()
+        j = sub.merge(cnt, on=["date","campaign","adset","ad"], how="inner")
+        j = j.drop_duplicates(subset=["date","campaign","adset","ad"])   # 1 linha Meta por combinação
+        df.loc[j["index"], "leads"] = j["crm"].values
+        # leads do CRM sem linha correspondente no Meta (dia sem entrega etc.) → linha só com o lead
+        k = cnt.merge(j[["date","campaign","adset","ad"]], how="left", indicator=True)
+        k = k[k["_merge"]=="left_only"]
+        if len(k):
+            extra = []
+            for _, r in k.iterrows():
+                base = df[m & (df["campaign"]==r["campaign"]) & (df["adset"]==r["adset"]) & (df["ad"]==r["ad"])]
+                row = (base.iloc[0].copy() if len(base) else df[m].iloc[0].copy())
+                for c in ["spend","impressions","link_clicks","page_view","leads_native","checkout","purchases","purchase_value"]:
+                    if c in row.index: row[c] = 0
+                row["date"], row["campaign"], row["adset"], row["ad"], row["leads"] = r["date"], r["campaign"], r["adset"], r["ad"], r["crm"]
+                row["lct_codes"] = matched_codes(r["campaign"])
+                extra.append(row)
+            df = pd.concat([df, pd.DataFrame(extra)], ignore_index=True)
+        print(f"     CRM [{lb}]: {len(AC_DATA_LCT[lb]['raw'])} leads no total | {n_org} não meta-ads/paid (só na aba ActiveCampaign)")
+        print(f"     {len(crm)} leads meta-ads/paid [{lb}] | casados c/ Meta: {int(j['crm'].sum())} | sem linha Meta (adicionados): {int(k['crm'].sum()) if len(k) else 0}"
+              + (f" | ignorados: {len(fora)} sem '{termo}' na utm_campaign" if len(fora) else "") + (f", {sem_data} sem data" if sem_data else ""))
+    return df
+
 def build_ac_data(df_ac):
     """Estrutura de leads reais para o dashboard:
        - raw: [{d, us, um, uc, uco, ut}] (1 por lead) → JS filtra por período
@@ -1006,6 +1064,7 @@ def inject_all(tpl, meta_k, meta_d, meta_dc, meta_raw_c, meta_t, meta_bd, pes, l
     html=replace_js_const(html,"LANCAMENTO_EM_CURSO", LANCAMENTO_EM_CURSO)
     html=replace_js_const(html,"MOSTRAR_VENDAS",  MOSTRAR_VENDAS)
     html=replace_js_const(html,"LCT_META_ONLY",   LCT_META_ONLY)
+    html=replace_js_const(html,"AC_DATA_LCT",     AC_DATA_LCT)
     html=replace_js_const(html,"CRIPUB",          cripub if (USAR_CRIPUB and cripub) else False)
     html=replace_js_const(html,"MOSTRAR_TUDO",    MOSTRAR_TUDO)
     html=replace_js_const(html,"DATA_GERACAO",     hoje_madrid().strftime("%Y-%m-%d"))
@@ -1054,6 +1113,7 @@ def main():
 
     print("\n[META ADS]")
     df_meta=load_meta()
+    df_meta=apply_crm_leads(df_meta)
     m_k=meta_kpis(df_meta)
     m_d=meta_daily(df_meta)
     m_dc=meta_daily_camps(df_meta)

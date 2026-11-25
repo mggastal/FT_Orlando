@@ -518,7 +518,7 @@ details.desk-only{display:block!important;}
         <div class="sec-hd" data-i18n="campanhas">Campanhas</div>
         <div class="tc" id="tCamps"></div>
       </div>
-      <div class="section" style="margin-top:16px">
+      <div class="section" id="segSection" style="margin-top:16px">
         <div class="sec-hd"><span data-i18n="segmentacao">Segmentação</span> <span style="font-size:10px;font-weight:500;color:var(--muted2);text-transform:none;letter-spacing:0">· <span data-i18n="seg_fonte_meta">leads do Meta Ads (sem recorte no CRM)</span></span></div>
         <div class="g3">
           <div><div class="seg-ttl" data-i18n="genero">Gênero</div><div class="seg-card" id="tGender"></div></div>
@@ -597,6 +597,18 @@ details.desk-only{display:block!important;}
         </div>
         <div class="cw" style="height:210px"><canvas id="chCrmDaily"></canvas></div>
       </div>
+      <div class="g2" id="crmOrigemRow">
+        <div class="cc">
+          <div class="cc-t" data-i18n="crm_pxo_ttl">Pago x Orgânico</div>
+          <div class="cc-s" data-i18n="crm_pxo_sub">Pago = tráfego Meta Ads (utm_source meta-ads)</div>
+          <div class="cw" style="height:220px"><canvas id="chCrmPxO"></canvas></div>
+        </div>
+        <div class="cc">
+          <div class="cc-t" data-i18n="crm_origem_ttl">Leads por Origem</div>
+          <div class="cc-s" data-i18n="crm_origem_sub">utm_source / utm_medium</div>
+          <div class="cw" style="height:220px"><canvas id="chCrmOrigem"></canvas></div>
+        </div>
+      </div>
       <div class="crm-utm-grid" id="crmUtmGrid"></div>
     </div>
     <div class="page-section" id="page-diario">
@@ -661,6 +673,8 @@ const VENDAS_DATA = null;
 
 // ═══ CONFIG (injetados pelo gerador) ═══
 const AC_DATA = null;
+const AC_DATA_LCT = {};   // {lançamento: {raw:[...]}} → aba ActiveCampaign de lançamentos com leads do CRM próprios
+function _acLct(){ return (typeof AC_DATA_LCT!=='undefined' && AC_DATA_LCT && AC_DATA_LCT[filtroAtivo]) || null; }
 const CRIPUB = null;
 const LCT_META_ONLY = [];   // lançamentos sem CRM/Pesquisa/LPs (só Meta Ads)
 const MOSTRAR_TUDO = true;  // botão "Tudo" na barra de lançamentos
@@ -705,8 +719,8 @@ const TRANSLATIONS = {
     temp_quente:      'Quente',
     temp_frio:        'Frio',
     chart_leads_ttl:  'Leads Reais (CRM) & Investimento',
-    chart_leads_ttl_meta: 'Leads Diários (Meta) & Investimento',
-    chart_leads_sub_meta: 'Leads do Meta Ads (barras) · Invest. (linha) · CPL (linha tracejada)',
+    chart_leads_ttl_meta: 'Leads Diários (CRM) & Investimento',
+    chart_leads_sub_meta: 'Leads que entraram no CRM (barras) · Invest. (linha) · CPL (linha tracejada)',
     gran_dia:         'Diário',
     gran_sem:         'Semanal',
     gran_mes:         'Mensal',
@@ -848,6 +862,14 @@ const TRANSLATIONS = {
     nav_vendas:       'Vendas',
     nav_crm:          'ActiveCampaign',
     crm_daily_ttl:    'Leads Reais por Dia (CRM)',
+    crm_pxo_ttl:      'Pago x Orgânico',
+    crm_pxo_sub:      'Pago = tráfego Meta Ads (utm_source meta-ads)',
+    crm_utm_medium_lct: 'Mídia (utm_medium)',
+    crm_utm_term_lct:   'Público (utm_term)',
+    crm_origem_ttl:   'Leads por Origem',
+    crm_origem_sub:   'utm_source / utm_medium',
+    crm_pago:         'Pago',
+    crm_org:          'Orgânico',
     crm_daily_sub:    'Leads capturados no ActiveCampaign · adapta ao período',
     crm_kpi_leads:    'Leads Reais',
     crm_kpi_leads_pago:   'Leads Pagos',
@@ -920,8 +942,8 @@ const TRANSLATIONS = {
     temp_quente:      'Caliente',
     temp_frio:        'Frío',
     chart_leads_ttl:  'Leads Reales (CRM) & Inversión',
-    chart_leads_ttl_meta: 'Leads Diarios (Meta) & Inversión',
-    chart_leads_sub_meta: 'Leads de Meta Ads (barras) · Inversión (línea) · CPL (línea punteada)',
+    chart_leads_ttl_meta: 'Leads Diarios (CRM) & Inversión',
+    chart_leads_sub_meta: 'Leads que entraron en el CRM (barras) · Inversión (línea) · CPL (línea punteada)',
     gran_dia:         'Diario',
     gran_sem:         'Semanal',
     gran_mes:         'Mensual',
@@ -1053,6 +1075,14 @@ const TRANSLATIONS = {
     nav_vendas:       'Ventas',
     nav_crm:          'ActiveCampaign',
     crm_daily_ttl:    'Leads Reales por Día (CRM)',
+    crm_pxo_ttl:      'Pagado x Orgánico',
+    crm_pxo_sub:      'Pagado = tráfico Meta Ads (utm_source meta-ads)',
+    crm_utm_medium_lct: 'Medio (utm_medium)',
+    crm_utm_term_lct:   'Público (utm_term)',
+    crm_origem_ttl:   'Leads por Origen',
+    crm_origem_sub:   'utm_source / utm_medium',
+    crm_pago:         'Pagado',
+    crm_org:          'Orgánico',
     crm_daily_sub:    'Leads capturados en ActiveCampaign · se adapta al período',
     crm_kpi_leads:    'Leads Reales',
     crm_kpi_leads_pago:   'Leads Pagados',
@@ -1119,6 +1149,7 @@ let currentLang = localStorage.getItem('lct-lang') || 'PT';
 
 function t(key){
   if(key==='chart_leads_ttl'||key==='chart_leads_sub'){ let mo=false; try{ mo=_metaOnly(); }catch(e){} if(mo) key+='_meta'; }
+  if(key==='kpi_cap'){ let mo=false; try{ mo=_metaOnly(); }catch(e){} if(mo) key='crm_kpi_leads_sub'; }
   return (TRANSLATIONS[currentLang]||TRANSLATIONS['PT'])[key] || key;
 }
 
@@ -1395,7 +1426,7 @@ function buildFunnel(mk){
   // Se houver CRM, o último passo do funil mostra os LEADS REAIS (CRM) em vez dos leads do Meta
   const _temAC=_acOn();
   const leadsFinal=(_temAC&&mk.leadsReais!=null)?mk.leadsReais:mk.leads;
-  const leadsLbl=(_temAC&&mk.leadsReais!=null)?(t('f_leads')+' · CRM'):t('f_leads');
+  const leadsLbl=((_temAC&&mk.leadsReais!=null)||_metaOnly())?(t('f_leads')+' · CRM'):t('f_leads');
   const steps=[
     {lbl:t('f_impressoes'), val:mk.impressions,  color:hexA(FUNIL_COLOR,1.0)},
     {lbl:t('f_link_clicks'),val:mk.link_clicks,  color:hexA(FUNIL_COLOR,0.75)},
@@ -2777,11 +2808,14 @@ function updSbLct(){
   const ids=['sbPesquisa','sbLp','sbCrm'];
   if(!_sbBase){ _sbBase={}; ids.forEach(i=>{const e=document.getElementById(i); _sbBase[i]=e?e.style.display:'none';}); }
   const mo=_metaOnly();
-  ids.forEach(i=>{const e=document.getElementById(i); if(e) e.style.display=mo?'none':_sbBase[i];});
+  const lctCrm=!!_acLct();
+  ids.forEach(i=>{const e=document.getElementById(i); if(e) e.style.display=(i==='sbCrm'&&lctCrm)?'':(mo?'none':_sbBase[i]);});
   const cp=document.getElementById('sbCripub');
   if(cp) cp.style.display=(mo&&CRIPUB&&CRIPUB.rows)?'':'none';
+  const sg=document.getElementById('segSection');   // segmentação só tem leads do Meta → oculta onde os leads são do CRM
+  if(sg) sg.style.display=mo?'none':'';
   const cur=document.querySelector('.page-section.active')?.id?.replace('page-','');
-  if((mo && ['pesquisa','lp','crm'].includes(cur)) || (!mo && cur==='cripub')){
+  if((mo && ['pesquisa','lp'].includes(cur)) || (mo && cur==='crm' && !lctCrm) || (!mo && cur==='cripub')){
     goPage('meta', document.querySelector('.sb-item'));
   }
 }
@@ -3019,15 +3053,17 @@ function _acInPeriodo(dstr){
   return true;
 }
 // leads reais do período, respeitando o lançamento ativo (casa utm_campaign com o termo do lançamento)
-function _isPago(r){ return String(r.us||'').trim().toLowerCase()==='meta-ads'; }
+function _isPago(r){ if(r.p!==undefined) return r.p===1; return String(r.us||'').trim().toLowerCase()==='meta-ads'; }
 // modo: 'pago' (só utm_source=meta-ads — usado em CPL/funil/temperatura/métricas/LP),
 //       'organico' (source != meta-ads), 'todos' (ambos). Default = 'pago'.
-function acRowsPeriodo(modo){
-  if(!AC_DATA||!AC_DATA.raw||_metaOnly()) return [];
+function acRowsPeriodo(modo, crmPage){
+  // crmPage=true (aba ActiveCampaign): usa a base própria do lançamento quando houver (AC_DATA_LCT)
+  const src=(crmPage && _acLct()) ? _acLct() : ((AC_DATA && !_metaOnly()) ? AC_DATA : null);
+  if(!src||!src.raw) return [];
   modo = modo || 'pago';
   const termo=(filtroAtivo && filtroAtivo!=='all' && typeof LCT_TERMOS!=='undefined')?(LCT_TERMOS[filtroAtivo]||filtroAtivo):null;
   const campSel=(typeof metaCampSel!=='undefined' && metaCampSel && metaCampSel.size>0)?metaCampSel:null;
-  return AC_DATA.raw.filter(r=>{
+  return src.raw.filter(r=>{
     if(!_acInPeriodo(r.d)) return false;
     // filtro de origem: leads orgânicos NÃO entram no CPL (só tráfego pago = meta-ads)
     if(modo==='pago' && !_isPago(r)) return false;
@@ -3048,9 +3084,9 @@ function acInvestPeriodo(){
 }
 
 function renderCrm(){
-  if(!AC_DATA){ return; }
-  const rowsPago=acRowsPeriodo('pago');       // tráfego pago (meta-ads) — base do CPL
-  const rowsOrg =acRowsPeriodo('organico');   // orgânicos (source != meta-ads)
+  if(!AC_DATA && !_acLct()){ return; }
+  const rowsPago=acRowsPeriodo('pago',true);       // tráfego pago (meta-ads) — base do CPL
+  const rowsOrg =acRowsPeriodo('organico',true);   // orgânicos (source != meta-ads)
   const nPago=rowsPago.length, nOrg=rowsOrg.length;
   const nTotal=nPago+nOrg;
   const invest=acInvestPeriodo();
@@ -3068,9 +3104,31 @@ function renderCrm(){
     <div class="kpi" style="--kc:${corPago}"><div class="kpi-lbl">${t('crm_kpi_cpl_pago')}</div><div class="kpi-val" style="color:${corPago}">${cplPago!=null?fR(cplPago):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_pago_sub')}</div></div>
     <div class="kpi" style="--kc:${corTotal}"><div class="kpi-lbl">${t('crm_kpi_cpl_total')}</div><div class="kpi-val" style="color:${corTotal}">${cplTotal!=null?fR(cplTotal):'—'}</div><div class="kpi-sub">${t('crm_kpi_cpl_total_sub')}</div></div>`;
 
-  const rowsTodos=acRowsPeriodo('todos');   // relatório do Active = TODOS os leads (pago + orgânico)
+  const rowsTodos=acRowsPeriodo('todos',true);   // relatório do Active = TODOS os leads (pago + orgânico)
   renderCrmDaily(rowsTodos);
+  renderCrmOrigem(rowsTodos);
   renderCrmUtmPanels(rowsTodos, invest);
+}
+
+function renderCrmOrigem(rows){
+  const nP=rows.filter(_isPago).length, nO=rows.length-nP, tot=rows.length;
+  const pct=v=>tot>0?(v/tot*100).toFixed(0)+'%':'';
+  dc('chCrmPxO');
+  CH['chCrmPxO']=new Chart(document.getElementById('chCrmPxO'),{type:'doughnut',
+    data:{labels:[t('crm_pago'),t('crm_org')],datasets:[{data:[nP,nO],backgroundColor:['#3b82f6','#16a34a'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{
+      legend:{position:'bottom',labels:{color:TXT(),font:bf,boxWidth:9,padding:6}},
+      datalabels:{display:ctx=>ctx.dataset.data[ctx.dataIndex]>0,color:'#fff',font:{size:11,weight:'bold'},formatter:v=>v+' · '+pct(v)}}}});
+  const m={}; rows.forEach(r=>{ const k=(r.us||'(sem source)')+' / '+(r.um||'(sem medium)'); m[k]=(m[k]||0)+1; });
+  const it=Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  const mx=Math.max(1,...it.map(x=>x[1]));
+  dc('chCrmOrigem');
+  CH['chCrmOrigem']=new Chart(document.getElementById('chCrmOrigem'),{type:'bar',
+    data:{labels:it.map(x=>x[0]),datasets:[{data:it.map(x=>x[1]),backgroundColor:'rgba(59,130,246,.75)',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:46}},plugins:{legend:{display:false},
+      datalabels:{anchor:'end',align:'right',color:TXT(),font:{size:10,weight:'700'},formatter:v=>v+' · '+pct(v)}},
+      scales:{x:{beginAtZero:true,suggestedMax:Math.ceil(mx*1.15),ticks:{color:TXT(),font:bf,precision:0},grid:{color:GRID()}},
+              y:{ticks:{color:TXT(),font:bf},grid:{display:false}}}}});
 }
 
 function renderCrmDaily(rows){
@@ -3104,11 +3162,12 @@ function renderCrmUtmPanels(rows, invest){
   const investPorSet=_acInvestPorNivel('adset');
   const investPorAd=_acInvestPorNivel('ad');
 
+  const _lctSrc=!!_acLct();   // base própria: conjunto/público = utm_term
   const PANELS=[
-    {campo:'um',  ttl:t('crm_utm_medium'),   icon:'📦', investMap:investPorSet},
+    {campo:'um',  ttl:t(_lctSrc?'crm_utm_medium_lct':'crm_utm_medium'),   icon:'📦', investMap:_lctSrc?null:investPorSet},
     {campo:'uc',  ttl:t('crm_utm_campaign'), icon:'🎯', investMap:investPorCamp},
     {campo:'uco', ttl:t('crm_utm_content'),  icon:'🎨', investMap:investPorAd},
-    {campo:'ut',  ttl:t('crm_utm_term'),     icon:'📍', investMap:null},
+    {campo:'ut',  ttl:t(_lctSrc?'crm_utm_term_lct':'crm_utm_term'),     icon:'📍', investMap:_lctSrc?investPorSet:null},
     {campo:'us',  ttl:t('crm_utm_source'),   icon:'🌐', investMap:null},
   ];
   grid.innerHTML=PANELS.map(p=>{
