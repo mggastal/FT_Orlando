@@ -421,7 +421,7 @@ def meta_tables_period(df, p, img_dir, camp_status=None, adset_status=None, ad_s
             "tx_cv":round(ld/pv*100,2) if pv>0 else None,
             "tx_checkout":round(ck/pv*100,2) if pv>0 else None,
             "tx_conv_lp":round(pu/pv*100,2) if pv>0 else None,
-            "cpl":round(sp/ld,2) if ld>0 else None,
+            "cpl":round(sp/ld,2) if (ld>0 and sp>0) else None,
             "cpv":round(sp/pu,2) if pu>0 else None,
             "roas":round(pval/sp,2) if sp>0 else None,
             "cpm":round(sp/imp*1000,2) if imp>0 else None}
@@ -457,7 +457,7 @@ def meta_tables_period(df, p, img_dir, camp_status=None, adset_status=None, ad_s
             "tx_conv_lp":round(pu/pv*100,2) if pv>0 else None,
             "cpv":round(sp/pu,2) if pu>0 else None,
             "roas":round(pval/sp,2) if sp>0 else None,
-            "cpl":round(sp/ld,2) if ld>0 else None})
+            "cpl":round(sp/ld,2) if (ld>0 and sp>0) else None})
     return {"camps":camps,"adsets":adsets,"ads":ads}
 
 def meta_tables(df, img_dir):
@@ -839,6 +839,7 @@ def load_active_campaign():
     print(f"     {len(df)} leads reais | {df['data'].min().date() if len(df) else '—'} → {df['data'].max().date() if len(df) else '—'}")
     return df
 
+SEM_ATRIB = "Sem atribuição (UTM não preenchida)"
 AC_DATA_LCT = {}   # {label: {"raw":[...]}} → aba ActiveCampaign por lançamento (todos os leads, pago + orgânico)
 
 def apply_crm_leads(df):
@@ -864,8 +865,13 @@ def apply_crm_leads(df):
                                    for (_, r), pg in zip(crm.iterrows(), _pago)]}
         n_org = int((~_pago).sum())
         crm = crm[_pago]
-        fora = crm[~crm["utm_campaign"].str.lower().str.contains(termo, regex=False)]
-        crm = crm[crm["utm_campaign"].str.lower().str.contains(termo, regex=False)]
+        # leads pagos sem o termo do lançamento na utm_campaign (ex.: bug do Meta que manda
+        # "{{campaign.name}}" sem preencher) → contam no total do lançamento, sem atribuição a campanha
+        _tem = crm["utm_campaign"].str.lower().str.contains(termo, regex=False)
+        fora = crm[~_tem]
+        crm = crm.copy()
+        for c in ["utm_campaign","utm_term","utm_content"]:
+            crm.loc[~_tem, c] = SEM_ATRIB
         cnt = crm.groupby(["date","utm_campaign","utm_term","utm_content"]).size().rename("crm").reset_index()
         cnt.columns = ["date","campaign","adset","ad","crm"]
         m = df["campaign"].astype(str).str.lower().str.contains(termo, regex=False)
@@ -885,12 +891,16 @@ def apply_crm_leads(df):
                 for c in ["spend","impressions","link_clicks","page_view","leads_native","checkout","purchases","purchase_value"]:
                     if c in row.index: row[c] = 0
                 row["date"], row["campaign"], row["adset"], row["ad"], row["leads"] = r["date"], r["campaign"], r["adset"], r["ad"], r["crm"]
-                row["lct_codes"] = matched_codes(r["campaign"])
+                row["lct_codes"] = [lb]   # pertence ao lançamento mesmo sem campanha reconhecida
+                if r["campaign"] == SEM_ATRIB:
+                    for c in ["thumb","status","Image URL"]:
+                        if c in row.index: row[c] = ""
+                row["sem_atrib"] = (r["campaign"] == SEM_ATRIB)
                 extra.append(row)
             df = pd.concat([df, pd.DataFrame(extra)], ignore_index=True)
         print(f"     CRM [{lb}]: {len(AC_DATA_LCT[lb]['raw'])} leads no total | {n_org} não meta-ads/paid (só na aba ActiveCampaign)")
         print(f"     {len(crm)} leads meta-ads/paid [{lb}] | casados c/ Meta: {int(j['crm'].sum())} | sem linha Meta (adicionados): {int(k['crm'].sum()) if len(k) else 0}"
-              + (f" | ignorados: {len(fora)} sem '{termo}' na utm_campaign" if len(fora) else "") + (f", {sem_data} sem data" if sem_data else ""))
+              + (f" | sem atribuição (contam só no total): {len(fora)}" if len(fora) else "") + (f", {sem_data} sem data" if sem_data else ""))
     return df
 
 def build_ac_data(df_ac):
@@ -1179,7 +1189,8 @@ def main():
     print("\n[HTML]")
     if not Path(TEMPLATE_FILE).exists():
         print(f"  ERRO: {TEMPLATE_FILE} não encontrado"); return
-    cripub=build_cripub(df_meta,img_dir) if USAR_CRIPUB else None
+    _df_cp = df_meta[~df_meta["sem_atrib"].fillna(False).astype(bool)] if "sem_atrib" in df_meta.columns else df_meta
+    cripub=build_cripub(_df_cp,img_dir) if USAR_CRIPUB else None
     if cripub: print(f"  ✓ Criativos & Públicos: {len(cripub['ads'])} criativos | {len(cripub['adsets'])} públicos | {len(cripub['rows'])} linhas")
     html=inject_all(TEMPLATE_FILE,m_k,m_d,m_dc,m_raw,m_t,m_bd,pes,lpv_data,vendas_data,ac_data,cripub)
     Path(OUTPUT_FILE).write_text(html,encoding="utf-8")
